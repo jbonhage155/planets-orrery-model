@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orrery admin</title>
+<!-- Served by server.py at /admin. Not shown on the touchscreen. Reads /api/admin once a
+     second (the server only polls the servos while this page is open) and saves tuning
+     settings with POST /api/admin {"set": {...}}. -->
+<style>
+  :root { --bg:#f3f4f7; --card:#fff; --ink:#1b1f2b; --muted:#646b7d; --line:#dde1e8; --accent:#2f6fde;
+          --ok:#1f8a4c; --warn:#b76e00; --bad:#c0392b; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f1117; --card:#181b24; --ink:#e7e9ef; --muted:#9aa1b2; --line:#2a2f3c; --accent:#6d9cf5;
+            --ok:#46c27d; --warn:#e0a13a; --bad:#ef6a5a; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 system-ui, sans-serif; }
+  main { max-width:1100px; margin:0 auto; padding:16px; }
+  h1 { font-size:20px; margin:4px 0 2px; } h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 10px; }
+  .sub { color:var(--muted); margin:0 0 14px; } a { color:var(--accent); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:14px; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; }
+  .kpi b { display:block; font-size:20px; font-variant-numeric:tabular-nums; } .kpi span { color:var(--muted); font-size:12px; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  button { font:inherit; padding:7px 14px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--ink); cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .scroll { overflow-x:auto; }
+  table { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums; }
+  th, td { text-align:right; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align:left; }
+  th { color:var(--muted); font-weight:600; font-size:12px; }
+  .pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:12px; font-weight:600; }
+  .ok { color:var(--ok); } .warn { color:var(--warn); } .bad { color:var(--bad); } .muted { color:var(--muted); }
+  .set { display:grid; grid-template-columns:160px 110px 1fr; gap:6px 12px; align-items:center; }
+  .set input { font:inherit; width:100%; padding:5px 8px; border:1px solid var(--line); border-radius:7px; background:var(--bg); color:var(--ink); }
+  .set small { color:var(--muted); }
+  #taps { font:12px/1.5 ui-monospace, Menlo, monospace; max-height:220px; overflow:auto; margin:0; white-space:pre-wrap; }
+  #banner { display:none; background:var(--bad); color:#fff; padding:8px 12px; border-radius:8px; margin-bottom:12px; }
+  @media (max-width:640px) { .set { grid-template-columns:1fr 100px; } .set small { grid-column:1 / -1; margin-bottom:6px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Orrery admin</h1>
+  <p class="sub">Live from the Pi · updates every second · <a href="/">open the touchscreen view</a></p>
+  <div id="banner"></div>
+
+  <section class="card">
+    <h2>Now</h2>
+    <div class="kpis" id="kpis"></div>
+    <div class="row">
+      <button class="primary" data-do='{"do":"press"}' id="runBtn">Run / Pause</button>
+      <button data-do='{"do":"today"}'>Today</button>
+      <button data-do='{"do":"turn","n":-1}'>Slower ◀</button>
+      <button data-do='{"do":"turn","n":1}'>▶ Faster</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Servos</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>ID</th><th>Planet</th><th>Status</th><th>Mode</th><th>Should point</th><th>Points at</th><th>Off by</th><th>Speed</th><th>Asked</th><th>Load</th><th>Volts</th><th>Temp</th></tr></thead>
+      <tbody id="servos"></tbody>
+    </table></div>
+    <p class="sub" style="margin:8px 0 0">Angles are degrees round the Sun, counter-clockwise from above. "Off by" is only tracked while running. Speeds in rpm.</p>
+  </section>
+
+  <section class="card">
+    <h2>Tuning (saved on the Pi, applied at once)</h2>
+    <div class="set" id="settings"></div>
+    <div class="row"><button class="primary" id="save">Save changes</button><span id="saved" class="muted"></span></div>
+  </section>
+
+  <section class="card">
+    <h2>Recent taps (screen, phone or this page)</h2>
+    <pre id="taps"></pre>
+  </section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let settingsBuilt = false;
+const fmt = (v, d = 1, unit = '') => v === null || v === undefined ? '<span class="muted">–</span>' : (+v).toFixed(d) + unit;
+function dur(s) { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? `${h} h ${m} min` : `${m} min ${s % 60} s`; }
+function speedText(y) { return y === 0 ? 'stopped' : `${y > 0 ? '+' : '−'}${Math.abs(y) < 1 ? Math.abs(y) * 12 + ' months' : Math.abs(y).toLocaleString() + ' yr'} / min`; }
+
+async function refresh() {
+  try {
+    const a = await (await fetch('/api/admin', { cache:'no-store' })).json(), s = a.state;
+    $('banner').style.display = s.error ? 'block' : 'none'; $('banner').textContent = 'Servo problem: ' + s.error;
+    const connected = a.servos.filter(r => r.connected).length;
+    $('kpis').innerHTML = [
+      ['Date shown', s.date], ['Tab on screen', s.mode === 'run' ? 'Run (solar system)' : s.mode === 'travel' ? (s.editing !== null ? 'Time travel: picking a date' : 'Time travel') : s.mode === 'scale' ? 'Scale' : s.mode === 'health' ? 'Settings' : 'Planets: ' + ['Sun', ...s.names][s.planet]],
+      ['Motion', s.running ? '<span class="ok">running</span>' : s.moving ? '<span class="warn">moving to date</span>' : 'paused'],
+      ['Speed', s.running ? speedText(s.years_per_min) + (s.ypm_set !== s.years_per_min ? ` (chosen ${speedText(s.ypm_set)}, waiting for Run)` : '') : `chosen ${speedText(s.ypm_set)}`],
+      ['Servos connected', `${connected} of ${a.servos.length}`],
+      ['Pi CPU', a.pi.cpu_c === null ? '–' : (a.pi.cpu_c * 9 / 5 + 32).toFixed(1) + ' °F'],
+      ['Server up', dur(a.pi.server_up_s)],
+    ].map(([k, v]) => `<div class="kpi"><span>${k}</span><b>${v}</b></div>`).join('');
+    $('servos').innerHTML = a.servos.map(r => {
+      const status = !r.connected ? '<span class="pill muted">not found</span>' : r.error ? `<span class="pill bad">${r.error}</span>`
+                   : r.racing ? '<span class="pill warn">too fast</span>' : '<span class="pill ok">ok</span>';
+      const hot = r.temp_c >= 60 ? 'bad' : r.temp_c >= 50 ? 'warn' : '';
+      const low = r.volts !== null && r.volts < 6.8 ? 'bad' : '';
+      return `<tr><td>${r.id}</td><td>${r.name}</td><td>${status}</td><td>${r.mode || '<span class="muted">–</span>'}</td>
+        <td>${fmt(r.target_deg, 1, '°')}</td><td>${fmt(r.at_deg, 1, '°')}</td><td>${fmt(r.err_deg, 1, '°')}</td>
+        <td>${fmt(r.rpm)}</td><td>${fmt(r.cmd_rpm)}</td><td>${fmt(r.load_pct, 0, ' %')}</td>
+        <td class="${low}">${fmt(r.volts, 1, ' V')}</td><td class="${hot}">${fmt(r.temp_c == null ? null : r.temp_c * 9 / 5 + 32, 0, ' °F')}</td></tr>`;
+    }).join('');
+    if (!settingsBuilt) {
+      $('settings').innerHTML = Object.entries(a.settings).map(([k, v]) =>
+        `<label for="s_${k}"><b>${k}</b></label><input id="s_${k}" type="number" min="${v.min}" max="${v.max}" step="${Number.isInteger(v.value) ? 1 : 0.5}" value="${v.value}"><small>${v.help} (${v.min}–${v.max})</small>`).join('');
+      settingsBuilt = true;
+    }
+    $('taps').textContent = a.taps.map(t => `${t.t}  ${t.from.padEnd(15)} ${JSON.stringify(t.do)}`).join('\n') || 'none yet';
+  } catch (e) { $('banner').style.display = 'block'; $('banner').textContent = 'Cannot reach the orrery server - retrying'; }
+}
+document.querySelectorAll('[data-do]').forEach(b => b.addEventListener('click', async () => {
+  await fetch('/api/action', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:b.dataset.do }); refresh();
+}));
+$('save').addEventListener('click', async () => {
+  const set = {}; document.querySelectorAll('#settings input').forEach(i => set[i.id.slice(2)] = +i.value);
+  const got = await (await fetch('/api/admin', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ set }) })).json();
+  Object.entries(got).forEach(([k, v]) => $('s_' + k).value = v);        // shows any clamping
+  $('saved').textContent = 'Saved ' + new Date().toLocaleTimeString();
+});
+refresh(); setInterval(refresh, 1000);
+</script>
+</body>
+</html>

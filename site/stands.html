@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Column and servo stands</title>
+<style>
+  :root { --bg:#eef0f4; --panel:#ffffff; --ink:#1c2030; --muted:#5d6475; --line:#d5d9e2; --accent:#2f6fde;
+          --done:#2f9e5b; --warn:#b4541a; --warnbg:#fff4ea; --kid:#8a4fd8; --adult:#2f6fde; --both:#e08a2e;
+          --good:#2f9e5b; --check:#d49a16; --bad:#c8402e; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 system-ui, sans-serif; }
+  main { max-width:860px; margin:0 auto; padding:16px 16px 60px; }
+  a { color:var(--accent); }
+  h1 { font-size:22px; margin:4px 0 2px; }
+  h2 { font-size:17px; margin:0 0 4px; }
+  p { margin:6px 0; color:var(--muted); }
+  header .top { display:flex; gap:14px; flex-wrap:wrap; font-size:13px; }
+  header .top a { text-decoration:none; }
+  #progress { position:sticky; top:0; z-index:5; background:var(--bg); padding:10px 0 8px; border-bottom:1px solid var(--line); margin-bottom:6px; }
+  #progress .bar { height:10px; background:#dde1ea; border-radius:6px; overflow:hidden; }
+  #progress .fill { height:100%; width:0; background:var(--done); transition:width .25s; }
+  #progress .txt { display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--muted); margin-top:4px; flex-wrap:wrap; }
+  button { font:inherit; font-size:12px; padding:2px 8px; border:1px solid var(--line); border-radius:6px; background:#f6f7fa; color:var(--ink); cursor:pointer; }
+  button.big { font-size:14px; padding:6px 12px; background:var(--accent); color:#fff; border-color:var(--accent); }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; margin:14px 0; padding:12px 14px; }
+  details.phase { background:var(--panel); border:1px solid var(--line); border-radius:10px; margin:14px 0; }
+  details.phase > summary { list-style:none; cursor:pointer; padding:12px 14px; display:flex; align-items:center; gap:10px; }
+  details.phase > summary::-webkit-details-marker { display:none; }
+  .num { flex:none; width:30px; height:30px; border-radius:50%; background:var(--accent); color:#fff; display:grid; place-items:center; font-weight:650; }
+  .phase.complete .num { background:var(--done); }
+  .phase.complete .num::after { content:"✓"; }
+  .phase.complete .num span { display:none; }
+  .ptitle { flex:1; min-width:0; }
+  .ptitle b { display:block; font-size:16px; }
+  .ptitle small { color:var(--muted); }
+  .count { flex:none; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .body { padding:0 14px 12px; }
+  .chip { display:inline-block; font-size:11px; font-weight:600; padding:1px 7px; border-radius:10px; color:#fff; vertical-align:1px; margin-left:4px; }
+  .chip.kid { background:var(--kid); } .chip.adult { background:var(--adult); } .chip.both { background:var(--both); }
+  ul.steps { list-style:none; margin:0; padding:0; }
+  ul.steps > li { border-top:1px solid var(--line); padding:9px 0 9px 36px; position:relative; }
+  ul.steps > li > input[type=checkbox] { position:absolute; left:4px; top:10px; width:22px; height:22px; margin:0; accent-color:var(--done); cursor:pointer; }
+  ul.steps > li > label { cursor:pointer; font-weight:600; }
+  ul.steps > li.done > label { color:var(--muted); text-decoration:line-through; }
+  ul.steps > li .more { color:var(--muted); font-size:14px; margin-top:3px; }
+  ul.steps > li .more ul, ul.steps > li .more ol { margin:4px 0; padding-left:18px; }
+  .note { background:var(--warnbg); border-left:4px solid var(--warn); border-radius:6px; padding:7px 10px; margin:8px 0; font-size:14px; color:var(--ink); }
+  .tip { background:#eef3fd; border-left:4px solid var(--accent); border-radius:6px; padding:7px 10px; margin:8px 0; font-size:14px; color:var(--ink); }
+  .ask { font-family:ui-monospace, Menlo, monospace; font-size:12.5px; background:#f1f3f7; border:1px solid var(--line); border-radius:5px; padding:1px 6px; color:var(--ink); }
+  .scroll { overflow-x:auto; }
+  table { border-collapse:collapse; font-size:13.5px; margin:6px 0; min-width:100%; }
+  th, td { text-align:left; padding:4px 10px 4px 0; border-bottom:1px solid var(--line); vertical-align:middle; font-variant-numeric:tabular-nums; }
+  th { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:600; }
+  td:first-child { font-weight:600; white-space:nowrap; }
+  td input { width:58px; font:inherit; padding:2px 4px; border:1px solid var(--line); border-radius:5px; }
+  .verdict { font-weight:650; font-size:13px; white-space:nowrap; }
+  .v-good { color:var(--good); } .v-check { color:var(--check); } .v-bad { color:var(--bad); } .v-none { color:var(--muted); font-weight:400; }
+  svg.fig { display:block; width:100%; height:auto; margin:6px 0; }
+  .legend { display:flex; gap:14px; flex-wrap:wrap; font-size:13px; color:var(--muted); }
+  .legend i { display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+  #template-wrap { overflow-x:auto; border:1px dashed var(--line); border-radius:8px; background:#fff; padding:8px; }
+  #template { display:block; width:100%; max-width:560px; height:auto; margin:0 auto; }
+  #plate-wrap { overflow-x:auto; border:1px dashed var(--line); border-radius:8px; background:#fff; padding:8px; }
+  #plateTpl { display:block; width:100%; max-width:560px; height:auto; margin:0 auto; }
+  #sheet-wrap { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; border:1px dashed var(--line); border-radius:8px; background:#fff; padding:8px; }
+  #sheet-wrap svg { display:block; width:100%; max-width:380px; height:auto; }
+  footer { color:var(--muted); font-size:12.5px; margin-top:20px; }
+  @media print {
+    @page { size:letter portrait; margin:0.4in; }
+    body.print-template main > *:not(#tpl-card) { display:none !important; }
+    body.print-template #tpl-card > *:not(#template-wrap) { display:none !important; }
+    body.print-template #tpl-card, body.print-template #template-wrap { border:0; padding:0; margin:0; background:#fff; }
+    body.print-template #template { width:7.2in !important; height:8.15in !important; max-width:none; }
+    body.print-plate main > *:not(#plate-card) { display:none !important; }
+    body.print-plate #plate-card > *:not(#plate-wrap) { display:none !important; }
+    body.print-plate #plate-card, body.print-plate #plate-wrap { border:0; padding:0; margin:0; background:#fff; }
+    body.print-plate #plateTpl { width:6.525in !important; height:8.75in !important; max-width:none; }
+    body.print-sheet main > *:not(#sheet-card) { display:none !important; }
+    body.print-sheet #sheet-card > *:not(#sheet-wrap) { display:none !important; }
+    body.print-sheet #sheet-card, body.print-sheet #sheet-wrap { display:block; border:0; padding:0; margin:0; background:#fff; }
+    body.print-sheet #sheet-wrap svg { width:7.2in !important; height:9.3in !important; max-width:none; break-after:page; }
+    body.print-sheet #sheet-wrap svg:last-child { break-after:auto; }
+    body:not(.print-template) #progress button, body:not(.print-template) header .top { display:none; }
+    body:not(.print-template) #progress { position:static; }
+    body:not(.print-template) details.phase:not([open]) > .body { display:block; }
+  }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="top"><a href="./">3D model</a><a href="build.html">Build checklist</a><a href="stands.html">Stands &amp; templates</a><a href="box.html">Box &amp; cutting</a><a href="paint.html">Painting guide</a><a href="arms.html">Arms &amp; collars</a><a href="rings.html">Rings</a></div>
+  <h1>Column and servo stands</h1>
+  <p>The eight gears are glued on (7 Nov 2026), their levels ½ in apart. This page goes from there to every gear turning under its own
+    servo: the Sun post into the base, the column stacked, each gear's wobble measured, the stands built, then one
+    servo meshed and tested before the other seven. Sizes are in inches unless they say mm. Ticks and the numbers you
+    type are saved in this browser on this device.
+    <span class="chip kid">Kid</span> <span class="chip adult">Grown-up</span> <span class="chip both">Together</span></p>
+</header>
+
+<div id="progress">
+  <div class="bar"><div class="fill"></div></div>
+  <div class="txt"><span id="ptxt">0 of 0 steps done</span><span><button id="expand">Open all</button> <button id="reset">Clear all ticks</button></span></div>
+</div>
+
+<!-- ============================================================ -->
+<div class="card">
+  <h2>Will the wobble be covered by the teeth?</h2>
+  <p>Mostly yes, if it's small. Here's how much room the teeth give you:</p>
+  <ul style="margin:4px 0 6px; padding-left:20px; color:var(--muted)">
+    <li>Each tooth is <b>2.25 mm</b> tall. Meshed at 40.0 mm (1.575 in) between centres, the two gears' teeth
+      overlap by <b>2 mm</b>.</li>
+    <li>An off-centre gear sticks out further on one side. You set the servo in so that side (the <b>tight spot</b>)
+      just clears. Half a turn later the teeth have pulled apart by the whole wobble.</li>
+    <li>The gears keep turning smoothly, with a tooth pair always pushing, until they've pulled apart by about
+      <b>¾ mm (0.03 in)</b>. Past that, there are moments when only the tooth tips touch: clicks, jumps and worn
+      teeth once the arms add load.</li>
+  </ul>
+  <svg class="fig" viewBox="0 0 640 150" role="img" aria-label="Teeth overlap at the tight spot, half a turn later, and with too much wobble">
+    <defs>
+      <path id="toothDown" d="M-12.4 0 h24.8 l-8.2 22.5 h-8.4 z"/>
+      <path id="toothUp" d="M-12.4 0 h24.8 l-8.2 -22.5 h-8.4 z"/>
+    </defs>
+    <g font-size="12.5" fill="#1c2030" font-family="system-ui, sans-serif">
+      <!-- panel 1: overlap 20 (2 mm) -->
+      <g transform="translate(15,20)">
+        <rect x="0" y="0" width="190" height="20" fill="#9aa3b5"/>
+        <g fill="#9aa3b5"><use href="#toothDown" x="12.4" y="20"/><use href="#toothDown" x="43.8" y="20"/><use href="#toothDown" x="75.2" y="20"/><use href="#toothDown" x="106.6" y="20"/><use href="#toothDown" x="138" y="20"/><use href="#toothDown" x="169.4" y="20"/></g>
+        <rect x="0" y="45" width="190" height="20" fill="#2f6fde"/>
+        <g fill="#2f6fde"><use href="#toothUp" x="28.1" y="45"/><use href="#toothUp" x="59.5" y="45"/><use href="#toothUp" x="90.9" y="45"/><use href="#toothUp" x="122.3" y="45"/><use href="#toothUp" x="153.7" y="45"/></g>
+        <text x="0" y="88" font-weight="650">Tight spot: set it here</text>
+        <text x="0" y="104" fill="#5d6475">2 mm of overlap, a sheet of</text>
+        <text x="0" y="119" fill="#5d6475">paper's clearance</text>
+      </g>
+      <!-- panel 2: overlap 15 (1.5 mm) -->
+      <g transform="translate(225,20)">
+        <rect x="0" y="0" width="190" height="20" fill="#9aa3b5"/>
+        <g fill="#9aa3b5"><use href="#toothDown" x="12.4" y="20"/><use href="#toothDown" x="43.8" y="20"/><use href="#toothDown" x="75.2" y="20"/><use href="#toothDown" x="106.6" y="20"/><use href="#toothDown" x="138" y="20"/><use href="#toothDown" x="169.4" y="20"/></g>
+        <rect x="0" y="50" width="190" height="20" fill="#2f9e5b"/>
+        <g fill="#2f9e5b"><use href="#toothUp" x="28.1" y="50"/><use href="#toothUp" x="59.5" y="50"/><use href="#toothUp" x="90.9" y="50"/><use href="#toothUp" x="122.3" y="50"/><use href="#toothUp" x="153.7" y="50"/></g>
+        <text x="0" y="93" font-weight="650">Half a turn later, ½ mm wobble</text>
+        <text x="0" y="109" fill="#5d6475">1.5 mm of overlap: still smooth</text>
+      </g>
+      <!-- panel 3: overlap 9 (0.9 mm) -->
+      <g transform="translate(435,20)">
+        <rect x="0" y="0" width="190" height="20" fill="#9aa3b5"/>
+        <g fill="#9aa3b5"><use href="#toothDown" x="12.4" y="20"/><use href="#toothDown" x="43.8" y="20"/><use href="#toothDown" x="75.2" y="20"/><use href="#toothDown" x="106.6" y="20"/><use href="#toothDown" x="138" y="20"/><use href="#toothDown" x="169.4" y="20"/></g>
+        <rect x="0" y="56" width="190" height="20" fill="#c8402e"/>
+        <g fill="#c8402e"><use href="#toothUp" x="28.1" y="56"/><use href="#toothUp" x="59.5" y="56"/><use href="#toothUp" x="90.9" y="56"/><use href="#toothUp" x="122.3" y="56"/><use href="#toothUp" x="153.7" y="56"/></g>
+        <text x="0" y="99" font-weight="650">Over 1 mm wobble</text>
+        <text x="0" y="115" fill="#5d6475">Only the tips touch: clicks</text>
+      </g>
+    </g>
+  </svg>
+  <p><b>Your budget</b> is the <b>swing</b>: the difference between a gear's closest and farthest point over one
+    full turn. Printer paper is about 0.1 mm (0.004 in) thick, so you can measure it by counting strips of paper:</p>
+  <svg class="fig" viewBox="0 0 640 64" role="img" aria-label="Swing budget: up to 0.4 mm good, 0.4 to 0.65 mm check, over 0.65 mm fix">
+    <g font-family="system-ui, sans-serif" font-size="12.5">
+      <rect x="10" y="8" width="248" height="22" rx="4" fill="#2f9e5b"/>
+      <rect x="258" y="8" width="155" height="22" fill="#d49a16"/>
+      <rect x="413" y="8" width="217" height="22" rx="4" fill="#c8402e"/>
+      <text x="18" y="24" fill="#fff" font-weight="650">Good: up to 0.4 mm (4 sheets)</text>
+      <text x="266" y="24" fill="#fff" font-weight="650">Check: 5–6 sheets</text>
+      <text x="421" y="24" fill="#fff" font-weight="650">Fix: 7+ sheets (~1/32 in)</text>
+      <g fill="#5d6475"><text x="10" y="48">0</text><text x="248" y="48">0.4 mm</text><text x="400" y="48">0.65 mm</text><text x="575" y="48">1 mm</text></g>
+    </g>
+  </svg>
+  <p>The budget covers <b>everything together</b>: the tube gear's wobble, the servo gear's wobble, and any sideways
+    play in the tube. That's why the steps below measure each gear on the real column, take up Mercury's play on the
+    rod, and set each servo at its gear's tight spot. These are textbook figures for module-1 teeth. Technic teeth have
+    a little extra backlash, so the powered test in phase 5 is the real judge.</p>
+  <div class="tip"><b>Trick: two wobbly gears can cancel.</b> The pair is 1:1, so the same teeth meet on every turn
+    and the two wobbles stay in step. Mark each gear's high spot with a dot (phases 3 and 5). Mesh them so the dots
+    are <b>mirror images across the line joining the two shafts</b>. For example, the tube gear's dot points straight at
+    the servo while the servo gear's dot points straight away from the column. Then the wobbles <b>subtract</b>
+    instead of adding.</div>
+</div>
+
+<!-- ============================================================ -->
+<details class="phase" open data-phase="1"><summary><div class="num"><span>1</span></div>
+  <div class="ptitle"><b>Sun post into the base</b><small>¼ in base sheet, 1/8 in bit, 5-minute epoxy</small></div><div class="count"></div></summary>
+<div class="body"><ul class="steps">
+  <li data-id="s1-back"><label>Choose the back edge of the base and write BACK on its film <span class="chip both">Together</span></label>
+    <div class="more">Leave the protective film on. Everything below is measured from this edge.</div></li>
+  <li data-id="s1-mark"><label>Mark the post hole: 6 in from either side, 3¾ in from the back edge <span class="chip kid">Kid</span></label>
+    <div class="more">Measure from both sides; the two marks should land on the same spot. (The printed template in
+      phase 4 has the same point at its centre, and its top edge is the back edge, so you can use it here instead.)</div></li>
+  <li data-id="s1-drill"><label>Drill 1/8 in, 3/16 in deep, <b>not through</b> <span class="chip adult">Grown-up</span></label>
+    <div class="more">Wrap tape round the bit 3/16 in from its tip as a depth flag. Scrap wood underneath, slow
+      speed, light pressure, drill held upright. The sheet is only ¼ in thick, so stop at the flag.</div></li>
+  <li data-id="s1-epoxy"><label>Epoxy the rod in, standing upright <span class="chip both">Together</span></label>
+    <div class="more">A little epoxy in the hole, push the rod to the bottom, wipe off what squeezes out. Check it's
+      square from two directions at right angles to each other, and prop it there (two blocks or books) while it
+      sets. Handle after about an hour; leave it <b>overnight</b> before you stack the column on it.</div></li>
+  <li data-id="s1-collar"><label>Collar on the rod, its top 2 3/16 in above the base; tighten its set screw <span class="chip adult">Grown-up</span></label>
+    <div class="more">This carries the whole column. You can slide it later to raise or lower everything.</div></li>
+</ul></div></details>
+
+<!-- ============================================================ -->
+<details class="phase" data-phase="2"><summary><div class="num"><span>2</span></div>
+  <div class="ptitle"><b>Stack the column, and hold its top</b><small>Washers, light oil, the ¼ in top sheet</small></div><div class="count"></div></summary>
+<div class="body">
+  <div class="note"><b>Mercury's play matters here.</b> The rod is about 1/32 in (0.9 mm) narrower than the inside
+    of Mercury's tube. On its own, that is more than the whole wobble budget, and every other tube rides on Mercury.
+    Take it up before you measure anything.</div>
+  <ul class="steps">
+  <li data-id="s2-mercury"><label>Mercury: its tube straight onto the collar (no washer; its gear is flush with the tube end) <span class="chip both">Together</span></label></li>
+  <li data-id="s2-tape"><label>Take up Mercury's play on the rod <span class="chip adult">Grown-up</span></label>
+    <div class="more">Lift Mercury off. Wrap the rod just above the collar (inside Mercury's gear end) and again near
+      Mercury's top, one wrap at a time, until the tube slides on with no side play but still turns freely.
+      Thread-seal (PTFE plumber's) tape is best, because it's slippery. Masking tape works too. Then wiggle Mercury's
+      gear sideways: you should barely feel it move.</div></li>
+  <li data-id="s2-rest"><label>Venus to Neptune: each washer onto the gear of the tube inside, then the tube <span class="chip both">Together</span></label>
+    <div class="more">Washers (none under Mercury): Venus M5 · Earth M5 drilled 7/32 · Mars M6 · Jupiter M6 drilled 9/32 · Saturn M6 drilled 5/16 ·
+      Uranus M8 drilled 11/32 · Neptune M8 drilled 3/8. A drop of light oil between tubes is fine now that the gears
+      are glued; wipe any off the gear faces.</div></li>
+  <li data-id="s2-lid"><label>Temporary top bearing: drill the lid's 13/32 in hole and hold the lid over the column <span class="chip adult">Grown-up</span></label>
+    <div class="more">In the finished box, the lid's hole holds the column's top. Without it, the 16 in rod flexes,
+      and a servo pushing on an upper gear moves it sideways by more than the whole budget. You need this hole anyway:
+      <ul>
+        <li>Cut the top (11.75 × 9⅛) if it isn't cut yet. Mark the hole 6 in from either side and 3¾ in from the back
+          edge. Open it with the step bit to 3/8, then the 13/32 twist bit, slowly, scrap wood under. Ream until
+          Neptune's tube turns freely with no rattle.</li>
+        <li>Slide the lid down over Neptune's tube and rest its corners on four temporary legs (blocks, cans or books)
+          so its underside is about 7⅜ in above the base. Keep the legs at the corners, out of the servos' way.</li>
+        <li>Check the column stands upright with a square from two sides, then tape the legs down.</li>
+      </ul></div></li>
+  <li data-id="s2-spin"><label>Turn each tube by hand: free, and it doesn't drag its neighbour <span class="chip kid">Kid</span></label></li>
+</ul></div></details>
+
+<!-- ============================================================ -->
+<details class="phase" data-phase="3"><summary><div class="num"><span>3</span></div>
+  <div class="ptitle"><b>Measure each gear's wobble</b><small>On the real column: a flat block, paper strips, a fine marker</small></div><div class="count"></div></summary>
+<div class="body">
+  <p>You need a heavy block with a flat, square side (a wood block, a steel square on its edge, a stack of books),
+    printer paper cut into strips about ½ in wide, and a fine marker.</p>
+  <ul class="steps">
+  <li data-id="s3-touch"><label>Find the tight spot <span class="chip both">Together</span></label>
+    <div class="more">Stand the block on the base with its flat side just touching the gear's tooth tips. Turn the
+      tube slowly, one full turn. If a tooth catches, ease the block out until the gear only just brushes past at its
+      tightest point. Push lightly: a hard push shifts the tube on its play and spoils the reading.</div></li>
+  <li data-id="s3-dot"><label>Dot the tightest tooth with the marker <span class="chip kid">Kid</span></label>
+    <div class="more">Put the dot on the gear's top face, out at the teeth, not near the hole (the washer sits
+      there). That dot is the gear's <b>high spot</b>.</div></li>
+  <li data-id="s3-count"><label>Turn half a turn and count paper strips in the gap <span class="chip kid">Kid</span></label>
+    <div class="more">Slide strips one at a time between the tooth tips and the block until they're snug. Type the
+      count in the table. Also watch the gear's face while it turns: it should stay level to within about 1 mm. A
+      gear glued on at a tilt wobbles up and down too.</div></li>
+  <li data-id="s3-all"><label>Do it for all eight <span class="chip both">Together</span></label>
+    <div class="more">Any order. Go round the column with the block; the lower gears are easier to reach before the
+      servos go in.</div></li>
+</ul>
+  <div class="scroll"><table id="wob">
+    <tr><th>Planet</th><th>Tube gear (sheets)</th><th>Servo gear (sheets, phase 5)</th><th>Worst case</th><th>Dots matched</th></tr>
+  </table></div>
+  <p style="font-size:13px"><b>Worst case</b> adds the two swings; <b>Dots matched</b> uses the trick at the top
+    (the difference between them). Mercury's row also needs its rod play taken up (phase 2).</p>
+  <div class="note"><b>A gear marked Fix?</b> Try the free fixes first: re-centre its servo gear (phase 5), match the
+    dots, and set the mesh at the tight spot. If it's still past 0.65 mm, swap that tube's gear: you have 8 spare
+    40-tooth gears. Lift the tubes outside it off the column. Warm the joint with a hair dryer for a minute or two,
+    then twist the gear off with pliers on the gear, never on the tube. If it won't come, cut the gear off with flush
+    cutters without squeezing the tube. Scrape the old epoxy off the brass. Drill the new gear one size small and ream
+    it to a snug slide that doesn't rock. Glue it at the same mark, and while the epoxy is still soft, turn it against
+    the block and nudge it centred.</div>
+</div></details>
+
+<!-- ============================================================ -->
+<details class="phase" data-phase="4"><summary><div class="num"><span>4</span></div>
+  <div class="ptitle"><b>Build the stands</b><small>⅛ in offcut, M2 screws, M5 rods and nuts, thumb nuts, the printed template</small></div><div class="count"></div></summary>
+<div class="body">
+  <div class="scroll"><table>
+    <tr><th>Servo (ID)</th><th>Plate top above the base (start here; ½ in levels, as built)</th><th>2 rods, each (as cut)</th></tr>
+    <tr><td>Mercury (1)</td><td>0.67</td><td>35 mm</td></tr>
+    <tr><td>Venus (2)</td><td>1.17</td><td>51 mm</td></tr>
+    <tr><td>Earth (3)</td><td>1.67</td><td>68 mm</td></tr>
+    <tr><td>Mars (4)</td><td>2.17</td><td>84 mm</td></tr>
+    <tr><td>Jupiter (5)</td><td>2.67</td><td>101 mm</td></tr>
+    <tr><td>Saturn (6)</td><td>3.17</td><td>117 mm</td></tr>
+    <tr><td>Uranus (7)</td><td>3.67</td><td>134 mm</td></tr>
+    <tr><td>Neptune (8)</td><td>4.19</td><td>150 mm</td></tr>
+  </table></div>
+  <p>Cut from seven 250 mm M5 rods: 150 + 84 (×2), 134 + 101 (×2), 117 + 117, 68 + 68 + 51 + 51, and 35 + 35
+    (one spare rod). If your washers are thinner than 2 mm, the upper gears sit a little lower than drawn.
+    The heights are only where to start: the thumb nuts set the real height. (7 Nov 2026: the gears are about 4 mm thick, not 8, so with an 8.5 mm gap the levels came out ½ in apart instead of 0.65; the plates sit lower than the rods were cut for, which only leaves spare rod above the nuts.)</p>
+  <ul class="steps">
+  <li data-id="s4-plates"><label>Cut 8 stand plates, 2 × 1⅞ in, from ⅛ in acrylic <span class="chip adult">Grown-up</span></label>
+    <div class="more">To do this before the box: score a 4 11/16 in strip off one ⅛ in sheet (the back-door sheet: the 7 5/16 × 12 in piece left is the door, already at its height; its length is trimmed to the opening once the box is glued), snap two 2 in strips off it (the 11/16 in left over is scrap), and cut each into 1⅞ in pieces: 12 plates, 8 + 4 spare. Printable full-size marking guide: <a href="#sheet-card">sheet cutting template</a>. Then the <a href="#plate-card">plate template</a>.</div></li>
+  <li data-id="s4-screw"><label>Fix each servo to its plate, the plate under the whole servo <span class="chip adult">Grown-up</span></label>
+    <div class="more">Plug its cable(s) in first: the plugs lie flat under the servo. Set it on the plate, centred side
+      to side, its far end (away from the gear) 5/32 in in from the plate's far edge; it rests on its end pad and round boss. Look up
+      through the clear plate, dot its <b>four bottom holes</b> (Ø1.6 mm, a 0.96 × 0.81 in rectangle) and drill them
+      7/64 in. Those holes sit about 1/16 in above the plate, so stack M2 nylon washers on each screw between the
+      plate and the servo to fill the gap. Four <b>M2 × 10 self-tapping</b> (pointed) screws, snug, not hard; none in
+      the round boss. Cables: the one from the servo before leaves on the left, the one to the next on the right (looking out
+      from the column); Mercury's both on the right, toward the driver board. Label each plate with its planet.
+      The chain (8½ in cables): board → Mercury → Venus → Earth → Mars → Jupiter → Saturn → Uranus → Neptune, each
+      along its plate's side edge, off the outer end and round the outside of the ring to the next plate.</div></li>
+  <li data-id="s4-slots"><label>Rod holes: two 13/64 in holes, 0.42 in in from the plate's far-end edge, 1⅜ in apart <span class="chip adult">Grown-up</span></label>
+    <div class="more">One each side of the servo, 11/16 in from its centre line (4 Nov 2026: 1.3 in apart put the nut on
+      top against the servo's side). The base holes stay 1.3 in apart, so ease each pair of rods apart about 1/32 in
+      to drop the plate on; they spring back and hold it. Snug holes, no slots: if the mesh needs the servo nearer to or
+      further from the column, ease both holes a little in that direction only.</div></li>
+  <li data-id="s4-print"><label>Print the drilling template (just after this phase) at 100 % and check its 2 in bar with a ruler <span class="chip both">Together</span></label>
+    <div class="more">In the print dialog, choose <b>Actual size</b> or <b>Scale 100 %</b>, not "Fit to page". If the
+      bar isn't exactly 2 in, the holes will be off: fix the setting and reprint.</div></li>
+  <li data-id="s4-tape"><label>Slide the template over the post and tape it down <span class="chip both">Together</span></label>
+    <div class="more">Cut out the small centre circle and cut along the dotted slit from the right-hand edge, so the
+      paper slides over the post. Line its top edge up with the base's <b>back edge</b>, and its centre line 6 in from either side. Tape the
+      corners.</div></li>
+  <li data-id="s4-check"><label>Check the template before drilling: each + is 1 9/16 in from the post's centre <span class="chip kid">Kid</span></label>
+    <div class="more">Measure two or three of them (1.575 in, 40 mm). The faint servo outlines overlap on purpose: the
+      servos stand at different heights, so they pass over and under each other.</div></li>
+  <li data-id="s4-drill"><label>Drill the 16 rod holes, 13/64 in, through the base <span class="chip adult">Grown-up</span></label>
+    <div class="more">Prick each centre through the paper with a nail or an awl first. Pilot with a 1/16 in bit, then
+      13/64, slowly, scrap wood under. Peel the template off afterwards. Small errors around the circle hardly matter;
+      small errors toward or away from the column are taken up later by easing the plate's holes.</div></li>
+  <li data-id="s4-rods"><label>Cut the rods; fit each with a nut on top of the base and a washer + nut underneath <span class="chip adult">Grown-up</span></label>
+    <div class="more">Run a nut on before cutting; unscrewing it afterwards cleans up the cut thread. Until the rubber
+      feet go on, rest the base on two strips of scrap wood so the nuts underneath clear the table. Then run a thumb
+      nut down each rod to about its plate height (table above).</div></li>
+</ul>
+
+</div></details>
+
+<div class="card" id="tpl-card">
+    <h2>Drilling template, full size</h2>
+    <p>Computed from the 3D model's servo ring: shafts 1.575 in from the column, ring order Mercury (front), Jupiter,
+      <i>empty</i>, Mars, Neptune, Earth (back), Uranus, Venus, Saturn, going anticlockwise seen from above.</p>
+    <p><button class="big" id="printTpl">Print the template</button></p>
+    <div id="template-wrap"><svg id="template" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  </div>
+
+<div class="card" id="sheet-card">
+    <h2>Sheet cutting template, full size</h2>
+    <p>For the back-door sheet (one 12 × 12 in ⅛ in sheet, 26 Oct 2026): a 4 11/16 in strip off one edge, which leaves
+      the 7 5/16 × 12 door piece, then two 2 in plate strips (11/16 in scrap) and crosscuts every 1⅞ in: 12 plates.
+      Two pages, printed at 100 % (check each page's 2 in bar). Trim page 1 along its dashed 6 in line, lay it over
+      page 2's shaded band with the trimmed edge on the 6 in line, and tape. Trim the paper along the SHEET EDGE and
+      SHEET END lines, set it on the sheet with those edges flush on two factory edges, and tape it down.</p>
+    <p>Prick every dot through the paper into the film with a pin, lift the paper off, then join the pricks with the
+      clamped steel ruler and score. Red: the three long cuts, in order ① ② ③ (① takes the door off). Blue: the
+      crosscuts, two pricks per strip, done on each 2 in strip after it is snapped off.</p>
+    <p><button class="big" id="printSheet">Print the sheet template</button></p>
+    <div id="sheet-wrap"><svg id="sheet1" xmlns="http://www.w3.org/2000/svg"></svg><svg id="sheet2" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  </div>
+
+<div class="card" id="plate-card">
+    <h2>Servo plate template, full size</h2>
+    <p>Eight plates, 2 in long × 1⅞ in wide, one per planet (25 Oct 2026): ⅛ in clear acrylic under the whole servo,
+      running 5/32 in past its far end so the far screw holes are ¼ in from the edge (closer, acrylic cracks).
+      For the material, score a 4 11/16 in strip off one ⅛ in sheet (the back-door sheet: the 7 5/16 × 12 in piece left is the door, already at its height; its length is trimmed to the opening once the box is glued), snap two 2 in strips off it (the 11/16 in left over is scrap), and cut each into 1⅞ in pieces: 12 plates, 8 + 4 spare. Cut the pieces first, leave the protective film on, tape a printed square on top of each, prick every
+      centre through the paper with a pin, peel the paper off and drill. The <b>far end</b> (rod holes) is at the top
+      of each square; the gear end, toward the column, at the bottom.</p>
+    <p><b>4 Nov 2026: rod holes now 1⅜ in apart</b> (11/16 in each side of the centre line; were 1.3). At 1.3 the
+      rod sat only 0.165 in from the servo's side, and the nut on top (0.18 in centre to corner) hit the servo as it
+      turned. At 1⅜ the corners clear by about 1/50 in (the dashed red ring). The base holes stay 1.3 in apart: ease
+      each pair of rods apart about 1/32 in to drop the plate on; they spring back and grip it. Snug 13/64 in holes, no
+      slots. If a servo then needs to move toward or away from the column to mesh, ease both its holes a little in that
+      direction only (deburring tool, or sandpaper rolled round a nail).</p>
+    <p><b>Centring the servo:</b> prick the two black + on the centre line and the four grey + at the servo's corners
+      too, then join them on the film with the ruler and set the servo inside the lines. A skewed servo is what makes
+      one nut fit and the other not.</p>
+    <p>Red: the two rod holes, 13/64 in. Blue: the four screw holes, 7/64 in, from Waveshare's servo drawing (a 0.96 × 0.81 in rectangle); before
+      drilling them, set the servo on the plate and check through the clear acrylic that they sit under its holes.
+      The grey outline is where the servo sits; the arrows show which side its cables leave from, seen from above.</p>
+    <p><button class="big" id="printPlate">Print the plate template</button></p>
+    <div id="plate-wrap"><svg id="plateTpl" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  </div>
+
+<!-- ============================================================ -->
+<details class="phase" data-phase="5"><summary><div class="num"><span>5</span></div>
+  <div class="ptitle"><b>One servo first: Mercury</b><small>The worst case: if it passes, the others will</small></div><div class="count"></div></summary>
+<div class="body">
+  <div class="tip"><b>The servos can't be turned by hand.</b> Their gearbox is 345:1, so once a servo gear is
+    meshed, the tube won't turn by hand either: don't force it. Claude turns them for you, one at a time, from the Pi.
+    Ask in plain words, for example <span class="ask">spin Mercury's servo slowly</span>.
+    <span style="color:var(--muted)">(For Claude: stop the <code>orrery</code> service, then
+    <code>pi/servo_tool.py spin 1 --rpm 3</code>; it prints the load. <code>goto 1 &lt;deg&gt;</code> points it.)</span></div>
+  <ul class="steps">
+  <li data-id="s5-centre"><label>Centre Mercury's servo gear and dot its high spot <span class="chip both">Together</span></label>
+    <div class="more">Before mounting, with the servo on the bench, ask Claude to spin it slowly. Hold the block
+      against its teeth as in phase 3. The four M3 screws allow about ±0.9 mm of play, so if the swing is more than 2–3
+      sheets, loosen them, nudge the gear toward the side that's furthest out, tighten, and check again. Dot the high
+      spot and type the swing into the table in phase 3.</div></li>
+  <li data-id="s5-mount"><label>Onto its stand: plate over the rods, resting on the thumb nuts, nuts loose on top <span class="chip adult">Grown-up</span></label>
+    <div class="more">Thumb nut, then a ¼ in SAE washer, under the plate; a plain nut on top (no washer: there's no
+      room for one beside the servo). Ease the two rods apart a little to drop the plate on. Turn each top nut a full
+      turn to check its corners clear the servo.</div></li>
+  <li data-id="s5-height"><label>Set the height: the two gears' top faces level <span class="chip both">Together</span></label>
+    <div class="more">Lay a steel ruler across both top faces. Turn both thumb nuts the same amount (0.8 mm a turn)
+      until the ruler sits flat on both.</div></li>
+  <li data-id="s5-dots"><label>Line up the dots <span class="chip kid">Kid</span></label>
+    <div class="more">Turn the tube (it's still free) so its dot points straight at the servo. Ask Claude to point the
+      servo gear's dot straight away from the column. Mirror images, as in the trick at the top.</div></li>
+  <li data-id="s5-mesh"><label>Set the mesh with a strip of paper <span class="chip both">Together</span></label>
+    <div class="more">Hold a strip of printer paper between the teeth where they meet. It should be just gripped.
+      Too loose or too tight: take the plate off, ease both rod holes a little toward (or away from) the column, and
+      try again. Then tighten both top nuts down on the plate. Ask Claude to turn the servo
+      slowly, and the paper rolls out through the teeth. That leaves about a sheet of paper's clearance at the tight
+      spot.</div></li>
+  <li data-id="s5-slow"><label>Slow run, a few full turns each way <span class="chip both">Together</span></label>
+    <div class="more">Watch and listen. You want the tube turning steadily with no click, jump or pause, no groan at
+      one spot in every turn, and the tube not shifting sideways. Claude watches the servo's load: one bump per turn
+      means a tight spot. If it's tight somewhere, loosen the lock nuts, slide out a hair, and redo the paper with that
+      spot facing the servo.</div></li>
+  <li data-id="s5-fast"><label>Fast run at Mercury's top speed (20 rpm), and a light pinch <span class="chip both">Together</span></label>
+    <div class="more">While it spins, pinch the tube lightly between finger and thumb. It should keep turning without
+      clicking. The servo is very strong, so a light pinch is all you need.</div></li>
+  <li data-id="s5-dir"><label>Direction: the tube turns anticlockwise seen from above when the planet moves forward <span class="chip kid">Kid</span></label>
+    <div class="more">If it's clockwise, the software's <code>ARM_DIR</code> needs flipping. Tell Claude.</div></li>
+  <li data-id="s5-lock"><label>Tighten the lock nuts firmly and draw a marker line at each slot <span class="chip adult">Grown-up</span></label>
+    <div class="more">Then you can see if it ever creeps.</div></li>
+</ul></div></details>
+
+<!-- ============================================================ -->
+<details class="phase" data-phase="6"><summary><div class="num"><span>6</span></div>
+  <div class="ptitle"><b>The other seven, then all together</b><small>Same steps, working up from Venus</small></div><div class="count"></div></summary>
+<div class="body"><ul class="steps">
+  <li data-id="s6-venus"><label>Venus (2) <span class="chip both">Together</span></label>
+    <div class="more">Centre and dot the servo gear, mount it, level the faces, line up the dots, set the mesh with paper, run it slow and fast, then lock it.</div></li>
+  <li data-id="s6-earth"><label>Earth (3) <span class="chip both">Together</span></label></li>
+  <li data-id="s6-mars"><label>Mars (4) <span class="chip both">Together</span></label></li>
+  <li data-id="s6-jupiter"><label>Jupiter (5) <span class="chip both">Together</span></label></li>
+  <li data-id="s6-saturn"><label>Saturn (6) <span class="chip both">Together</span></label></li>
+  <li data-id="s6-uranus"><label>Uranus (7) <span class="chip both">Together</span></label></li>
+  <li data-id="s6-neptune"><label>Neptune (8) <span class="chip both">Together</span></label>
+    <div class="more">Its gear screws are closest to the lid: check they clear it (about ¼ in) as it turns.</div></li>
+  <li data-id="s6-cables"><label>Chain the servos and route each cable outward, clear of the gears <span class="chip adult">Grown-up</span></label></li>
+  <li data-id="s6-run"><label>Run the planets from the touchscreen at several speeds <span class="chip both">Together</span></label>
+    <div class="more">HEALTH shows all eight connected. Every tube turns smoothly, and none drags its neighbour.
+      There are no arms yet, so this is the cleanest test the gears will ever get: any click now will be worse with the
+      planets on.</div></li>
+</ul></div></details>
+
+<footer>Built from the project notes (design.md, parts-list.md, column-build.md) and the 3D model's servo ring. If a
+  size here disagrees with the 3D model, the model is the newer one. Wobble limits: standard 20° module-1 teeth, 40:40,
+  contact ratio about 1.7 at 40.0 mm, 1.24 at +0.5 mm and 1.0 at +0.75 mm.</footer>
+</main>
+
+<script>
+(() => {
+  // ---- Ticks (same scheme as build.html, own key) ----
+  const KEY = 'orrery-stands-v1', WKEY = 'orrery-stands-wobble-v1';
+  const load = k => { try { return JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) { return {}; } };
+  const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  let done = load(KEY);
+  const items = [...document.querySelectorAll('ul.steps > li[data-id]')];
+  items.forEach(li => {
+    const id = li.dataset.id, box = document.createElement('input');
+    box.type = 'checkbox'; box.id = 'cb-' + id; box.checked = !!done[id];
+    li.prepend(box);
+    li.querySelector('label').htmlFor = box.id;
+    box.addEventListener('change', () => { if (box.checked) done[id] = 1; else delete done[id]; store(KEY, done); update(); });
+  });
+  const phases = [...document.querySelectorAll('details.phase')];
+  function update() {
+    let n = 0;
+    items.forEach(li => { const on = !!done[li.dataset.id]; li.classList.toggle('done', on); if (on) n++; });
+    phases.forEach(d => {
+      const its = [...d.querySelectorAll('li[data-id]')], k = its.filter(li => done[li.dataset.id]).length;
+      d.querySelector('.count').textContent = k + ' / ' + its.length;
+      d.classList.toggle('complete', k === its.length);
+    });
+    document.querySelector('#progress .fill').style.width = (100 * n / items.length) + '%';
+    document.getElementById('ptxt').textContent = n + ' of ' + items.length + ' steps done';
+  }
+  update();
+  const next = phases.find(d => !d.classList.contains('complete'));
+  if (next) { phases.forEach(d => d.open = false); next.open = true; }
+  document.getElementById('expand').addEventListener('click', e => {
+    const open = e.target.textContent === 'Open all';
+    phases.forEach(d => d.open = open);
+    e.target.textContent = open ? 'Close all' : 'Open all';
+  });
+  document.getElementById('reset').addEventListener('click', () => {
+    if (!confirm('Clear every tick on this device? (The wobble numbers stay.)')) return;
+    done = {}; store(KEY, done); items.forEach(li => li.querySelector('input').checked = false); update();
+  });
+
+  // ---- Wobble table: paper sheets (0.1 mm each) -> verdict ----
+  const PLANETS = ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'];
+  const SHEET = 0.1, GOOD = 0.4, OK = 0.65;            // mm: see the budget bar
+  let wob = load(WKEY);
+  const table = document.getElementById('wob');
+  const verdict = mm => mm == null ? ['v-none', '–']
+    : mm <= GOOD + 1e-9 ? ['v-good', `Good (${mm.toFixed(1)} mm)`]
+    : mm <= OK + 1e-9 ? ['v-check', `Check (${mm.toFixed(1)} mm)`]
+    : ['v-bad', `Fix (${mm.toFixed(1)} mm)`];
+  PLANETS.forEach((p, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${p}</td><td><input type="number" min="0" step="1" inputmode="numeric" data-k="t${i}"></td>` +
+      `<td><input type="number" min="0" step="1" inputmode="numeric" data-k="s${i}"></td><td class="verdict" id="w${i}"></td><td class="verdict" id="m${i}"></td>`;
+    table.appendChild(tr);
+  });
+  const num = k => (wob[k] === '' || wob[k] == null) ? null : Number(wob[k]);
+  function rate() {
+    PLANETS.forEach((p, i) => {
+      const t = num('t' + i), s = num('s' + i);
+      const worst = t == null ? null : (t + (s ?? 0)) * SHEET;
+      const matched = t == null ? null : Math.abs(t - (s ?? 0)) * SHEET;
+      [['w', worst], ['m', s == null ? null : matched]].forEach(([id, v]) => {
+        const [cls, txt] = verdict(v), el = document.getElementById(id + i);
+        el.className = 'verdict ' + cls; el.textContent = txt;
+      });
+    });
+  }
+  table.querySelectorAll('input').forEach(inp => {
+    const k = inp.dataset.k; if (wob[k] != null) inp.value = wob[k];
+    inp.addEventListener('input', () => { wob[k] = inp.value; store(WKEY, wob); rate(); });
+  });
+  rate();
+
+  // ---- Full-size drilling template (inches), from the 3D model's numbers ----
+  // Base coordinates: x to the right, y toward the BACK, origin at the Sun post. Ring position k sits at
+  // k*40° + 265° (SERVO_SLOTS / SERVO_ROT in index.html), shaft 1.575 in out; the stand rods are 1.13 in further
+  // out along the servo and 0.65 in either side of it.
+  const SLOTS = [0, 4, -1, 3, 7, 2, 6, 1, 5], ROT = 265, SHAFT = 1.575, ROD_OUT = 1.13, ROD_SIDE = 0.65;
+  const X0 = -3.6, W = 7.2, Y_BACK = 3.75, H = 8.15;     // sheet: top edge = the base's back edge
+  const svg = document.getElementById('template'), NS = 'http://www.w3.org/2000/svg';
+  svg.setAttribute('viewBox', `${X0} ${-Y_BACK} ${W} ${H}`);
+  svg.setAttribute('width', W + 'in'); svg.setAttribute('height', H + 'in');
+  const el = (tag, attrs, parent = svg) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
+  const text = (x, y, s, attrs = {}) => { const t = el('text', Object.assign({ x, y, 'font-size':0.13, 'font-family':'system-ui, sans-serif', fill:'#1c2030', 'text-anchor':'middle' }, attrs)); t.textContent = s; return t; };
+  const P = (x, y) => [x, -y];                             // base coords -> svg coords
+  el('rect', { x:X0, y:-Y_BACK, width:W, height:H, fill:'#fff' });
+  // back edge, centre line, slit and centre hole
+  el('line', { x1:X0, y1:-Y_BACK + 0.004, x2:X0 + W, y2:-Y_BACK + 0.004, stroke:'#1c2030', 'stroke-width':0.012 });
+  text(1.7, -Y_BACK + 0.2, 'TOP EDGE = BASE BACK EDGE', { 'font-size':0.12, 'font-weight':650 });
+  el('line', { x1:0, y1:-Y_BACK, x2:0, y2:-0.09, stroke:'#5d6475', 'stroke-width':0.005 });
+  text(-1.75, -Y_BACK + 0.25, 'centre line: 6 in from either side of the base', { 'font-size':0.1, fill:'#5d6475' });
+  el('line', { x1:0.0625, y1:0, x2:X0 + W, y2:0, stroke:'#1c2030', 'stroke-width':0.01, 'stroke-dasharray':'0.06 0.05' });
+  text(2.75, -0.08, 'cut this slit to the centre', { 'font-size':0.1, fill:'#5d6475' });
+  el('line', { x1:-0.35, y1:0, x2:0.35, y2:0, stroke:'#1c2030', 'stroke-width':0.006 });
+  el('line', { x1:0, y1:-0.35, x2:0, y2:0.35, stroke:'#1c2030', 'stroke-width':0.006 });
+  el('circle', { cx:0, cy:0, r:0.0625, fill:'none', stroke:'#1c2030', 'stroke-width':0.012 });
+  text(0, 0.95, 'Sun post', { 'font-size':0.11, fill:'#5d6475' });
+  text(0, 1.1, '(3¾ in from the back edge)', { 'font-size':0.1, fill:'#5d6475' });
+  // ring of tube gears (outside diameter 1.65 in) and the servo shaft circle
+  el('circle', { cx:0, cy:0, r:0.825, fill:'none', stroke:'#9aa3b5', 'stroke-width':0.008 });
+  el('circle', { cx:0, cy:0, r:SHAFT, fill:'none', stroke:'#9aa3b5', 'stroke-width':0.006, 'stroke-dasharray':'0.05 0.05' });
+  const NAMES = ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'];
+  SLOTS.forEach((p, k) => {
+    const a = (k * 40 + ROT) * Math.PI / 180, ux = Math.cos(a), uy = Math.sin(a), tx = -uy, ty = ux;
+    const at = (r, s) => P(r * ux + s * tx, r * uy + s * ty);
+    if (p < 0) { const [x, y] = at(SHAFT + 0.7, 0); text(x, y, '(empty)', { 'font-size':0.11, fill:'#9aa3b5' }); return; }
+    const g = el('g', {});
+    // servo body footprint (0.4 in behind the shaft to 1.38 in past it, 0.97 in wide) and its shaft +
+    el('polygon', { points:[at(SHAFT - 0.4, -0.485), at(SHAFT + 1.38, -0.485), at(SHAFT + 1.38, 0.485), at(SHAFT - 0.4, 0.485)].map(q => q.join(',')).join(' '),
+      fill:'none', stroke:'#2f6fde', 'stroke-width':0.006, opacity:0.45 }, g);
+    const [sx, sy] = at(SHAFT, 0);
+    el('line', { x1:sx - 0.1, y1:sy, x2:sx + 0.1, y2:sy, stroke:'#2f6fde', 'stroke-width':0.012 }, g);
+    el('line', { x1:sx, y1:sy - 0.1, x2:sx, y2:sy + 0.1, stroke:'#2f6fde', 'stroke-width':0.012 }, g);
+    // the two rod holes: 13/64 in circle with a crosshair
+    [-1, 1].forEach(s => {
+      const [hx, hy] = at(SHAFT + ROD_OUT, s * ROD_SIDE);
+      el('circle', { cx:hx, cy:hy, r:13 / 128, fill:'#fde7e3', stroke:'#c8402e', 'stroke-width':0.012 }, g);
+      el('line', { x1:hx - 0.16, y1:hy, x2:hx + 0.16, y2:hy, stroke:'#c8402e', 'stroke-width':0.006 }, g);
+      el('line', { x1:hx, y1:hy - 0.16, x2:hx, y2:hy + 0.16, stroke:'#c8402e', 'stroke-width':0.006 }, g);
+    });
+    const [lx, ly] = at(SHAFT + 1.72, 0);
+    text(lx, ly + 0.045, `${NAMES[p]} (${p + 1})`, { 'font-weight':650 }).setAttribute('fill', '#2f6fde');
+  });
+  // front arrow and scale bar
+  text(0, 3.62, 'FRONT (screen side)', { 'font-size':0.11, fill:'#5d6475' });
+  const by = 3.95;
+  el('rect', { x:-1, y:by - 0.06, width:2, height:0.12, fill:'#1c2030' });
+  el('rect', { x:0, y:by - 0.06, width:1, height:0.12, fill:'#fff', stroke:'#1c2030', 'stroke-width':0.01 });
+  text(0, by + 0.25, 'This bar must measure exactly 2 in. Red circles: 13/64 in rod holes. + : servo shaft.', { 'font-size':0.1 });
+  text(0, by + 0.4, 'The faint servo outlines overlap on purpose: the servos stand at different heights.', { 'font-size':0.1, fill:'#5d6475' });
+
+  // ---- Full-size servo plate template (inches): eight 2 × 1⅞ in plates, far end (rod holes) up ----
+  // Plate frame (index.html, 25 Oct 2026): under the servo, which runs 0.398 in behind its shaft to 1.382 in past it;
+  // the plate 0.4475 behind to 1.5525 past. Rod holes 1.13 in past the shaft, 0.65 in to each side; screw
+  // holes 8.30 and 32.75 mm past it, 20.5 mm apart (Waveshare ST3215 drawing). y here = in from the far edge.
+  {
+    const PS = 1.875, PL = 2, FAR = 1.5525, MID = PS / 2, ROD_SIDE_PLATE = 0.6875, GAPX = 0.45, GAPY = 0.55, COLS = 3, ROWS = 3, TOP = 0.75;
+    const PW = COLS * PS + (COLS - 1) * GAPX, PH = TOP + ROWS * PL + (ROWS - 1) * GAPY + 0.9;
+    const ps = document.getElementById('plateTpl');
+    ps.setAttribute('viewBox', `0 0 ${PW} ${PH}`); ps.setAttribute('width', PW + 'in'); ps.setAttribute('height', PH + 'in');
+    const pe = (tag, attrs, parent = ps) => el(tag, attrs, parent);
+    const pt = (x, y, str, attrs = {}, parent = ps) => { const t = pe('text', Object.assign({ x, y, 'font-size':0.11, 'font-family':'system-ui, sans-serif', fill:'#1c2030', 'text-anchor':'middle' }, attrs), parent); t.textContent = str; return t; };
+    const cross = (g, x, y, r, c, w = 0.006) => { pe('line', { x1:x - r, y1:y, x2:x + r, y2:y, stroke:c, 'stroke-width':w }, g); pe('line', { x1:x, y1:y - r, x2:x, y2:y + r, stroke:c, 'stroke-width':w }, g); };
+    pe('rect', { x:0, y:0, width:PW, height:PH, fill:'#fff' });
+    pt(PW / 2, 0.22, 'SERVO PLATES · ⅛ in clear acrylic · 2 in long × 1⅞ in wide · far end (rod holes) at the top', { 'font-size':0.13, 'font-weight':650 });
+    pt(PW / 2, 0.42, 'Red: rod holes 13/64 in, 1⅜ in apart (dashed ring = the nut). Blue: screw holes 7/64 in. Grey +: servo corners. + : prick here.', { 'font-size':0.1, fill:'#5d6475' });
+    const NB = ['Board', ...NAMES];
+    [...NAMES, 'Spare'].forEach((name, k) => {
+      const ox = (k % COLS) * (PS + GAPX), oy = TOP + Math.floor(k / COLS) * (PL + GAPY), g = pe('g', { transform:`translate(${ox} ${oy})` });
+      pe('rect', { x:0, y:0, width:PS, height:PL, fill:'none', stroke:'#1c2030', 'stroke-width':0.012 }, g);
+      // where the servo sits, and its round boss under the shaft
+      pe('rect', { x:MID - 0.485, y:FAR - 1.382, width:0.97, height:1.78, fill:'none', stroke:'#9aa3b5', 'stroke-width':0.006, 'stroke-dasharray':'0.04 0.03' }, g);
+      pe('circle', { cx:MID, cy:FAR, r:0.157, fill:'none', stroke:'#9aa3b5', 'stroke-width':0.006 }, g);
+      pt(MID, FAR + 0.023, 'boss', { 'font-size':0.065, fill:'#9aa3b5' }, g);
+      // centre line and the servo's four corners: prick them, join them on the film, set the servo inside the lines
+      pe('line', { x1:MID, y1:0.04, x2:MID, y2:PL - 0.04, stroke:'#9aa3b5', 'stroke-width':0.005, 'stroke-dasharray':'0.06 0.04' }, g);
+      [[MID, 0.06], [MID, PL - 0.06]].forEach(([x, y]) => cross(g, x, y, 0.05, '#1c2030', 0.008));
+      [-0.485, 0.485].forEach(dz => [FAR - 1.382, Math.min(FAR + 0.398, PL - 0.03)].forEach(y => cross(g, MID + dz, y, 0.05, '#7a8296', 0.008)));
+      // rod holes, 1⅜ in apart (4 Nov 2026: at 1.3 the nut on top hit the servo's side); dashed = the nut's corners
+      [-ROD_SIDE_PLATE, ROD_SIDE_PLATE].forEach(dz => {
+        const x = MID + dz, y = FAR - 1.13, r = 13 / 128;
+        pe('circle', { cx:x, cy:y, r:0.182, fill:'none', stroke:'#c8402e', 'stroke-width':0.005, 'stroke-dasharray':'0.025 0.02' }, g);
+        pe('circle', { cx:x, cy:y, r, fill:'#fde7e3', stroke:'#c8402e', 'stroke-width':0.012 }, g);
+        cross(g, x, y, 0.14, '#c8402e');
+      });
+      // screw holes
+      [1.289, 0.327].forEach(sx => [-0.4035, 0.4035].forEach(dz => {
+        const x = MID + dz, y = FAR - sx;
+        pe('circle', { cx:x, cy:y, r:7 / 128, fill:'#e3ecfd', stroke:'#2f6fde', 'stroke-width':0.012 }, g);
+        cross(g, x, y, 0.1, '#2f6fde');
+      }));
+      // labels: planet, ends, cable sides (seen from above, looking out from the column = up the page)
+      if (k < NAMES.length) {
+        pt(MID, 0.88, name, { 'font-size':0.15, 'font-weight':650, fill:'#2f6fde' }, g);
+        pt(MID, 1.03, `(${k + 1})`, { 'font-size':0.1, fill:'#2f6fde' }, g);
+        const into = k === 0 ? 'board' : NB[k], out = k < NAMES.length - 1 ? NAMES[k + 1] : null;
+        if (k === 0) pt(MID + 0.42, 1.86, 'cables → board, Venus', { 'font-size':0.075, fill:'#b8322c' }, g);
+        else { pt(MID - 0.6, 1.86, `← from ${into}`, { 'font-size':0.075, fill:'#b8322c' }, g); if (out) pt(MID + 0.6, 1.86, `to ${out} →`, { 'font-size':0.075, fill:'#b8322c' }, g); }
+      } else pt(MID, 0.95, 'spare', { 'font-size':0.13, fill:'#9aa3b5' }, g);
+      pt(MID, -0.05, 'FAR END (rod holes)', { 'font-size':0.075, fill:'#5d6475' }, g);
+      pt(MID, PL + 0.12, 'gear end (toward the column)', { 'font-size':0.075, fill:'#5d6475' }, g);
+    });
+    const by2 = TOP + ROWS * PL + (ROWS - 1) * GAPY + 0.4;
+    pe('rect', { x:PW / 2 - 1, y:by2 - 0.06, width:2, height:0.12, fill:'#1c2030' });
+    pe('rect', { x:PW / 2, y:by2 - 0.06, width:1, height:0.12, fill:'#fff', stroke:'#1c2030', 'stroke-width':0.01 });
+    pt(PW / 2, by2 + 0.25, 'This bar must measure exactly 2 in (print at 100 %, “actual size”).', { 'font-size':0.1 });
+  }
+
+  // ---- Full-size cutting template for the back-door sheet (inches), two pages taped at 6 in ----
+  // 26 Oct 2026: a 4 11/16 in strip off one edge of a 12 × 12 ⅛ in sheet (the rest is the 7 5/16 × 12 door), split
+  // into two 2 in strips (11/16 in scrap), each crosscut every 1⅞ in: 12 plates. The sheet's length runs down the
+  // page: u = in from its factory edge, x = along it from its end.
+  {
+    const U0 = 0.8, V0 = 1.2, STRIP = 4.6875, DOORU = 0.55, PITCH = 1.875, JOIN = 6, LAP = 0.5, W = 7.2, H = 9.3;
+    const FR = ['', '1⅞', '3¾', '5⅝', '7½', '9⅜', '11¼'];
+    const page = (id, n) => {
+      const s = document.getElementById(id), xa = n === 1 ? 0 : JOIN - LAP, cs = n === 1 ? 0 : JOIN, ce = n === 1 ? JOIN : 12;
+      s.setAttribute('viewBox', `0 0 ${W} ${H}`); s.setAttribute('width', W + 'in'); s.setAttribute('height', H + 'in');
+      const e = (tag, a) => el(tag, a, s);
+      const t = (x, y, str, a = {}) => { const q = e('text', Object.assign({ x, y, 'font-size':0.11, 'font-family':'system-ui, sans-serif', fill:'#1c2030', 'text-anchor':'middle' }, a)); q.textContent = str; return q; };
+      const tv = (x, y, str, a = {}) => t(x, y, str, Object.assign({ transform:`rotate(-90 ${x} ${y})` }, a));   // reads up the page
+      const U = u => U0 + u, V = x => V0 + (x - xa), R = U(STRIP + DOORU);
+      const dot = (u, x, c) => e('circle', { cx:U(u), cy:V(x), r:0.03, fill:c });
+      e('rect', { x:0, y:0, width:W, height:H, fill:'#fff' });
+      t(W / 2, 0.25, `BACK-DOOR SHEET · page ${n} of 2 · ⅛ in acrylic, 12 × 12 · full size`, { 'font-size':0.13, 'font-weight':650 });
+      t(W / 2, 0.45, n === 1 ? 'Trim along the dashed 6 in line, lay this over page 2’s shaded band and tape. Trim along SHEET EDGE and SHEET END.'
+                             : 'Page 1 goes over the shaded band, its trimmed edge on the 6 in line. Trim along SHEET EDGE and SHEET END.', { 'font-size':0.1, fill:'#5d6475' });
+      t(W / 2, 0.62, 'Tape it on the sheet, prick every dot into the film, lift it off, join the pricks with the steel ruler and score.', { 'font-size':0.1, fill:'#5d6475' });
+      t(W / 2, 0.79, 'Red, in order: ① door off, ② first plate strip, ③ second (11/16 in scrap left). Blue: crosscuts, on each strip once snapped.', { 'font-size':0.1, fill:'#5d6475' });
+      // the bands: two plate strips, the scrap, the start of the door piece
+      const band = (u1, u2, fill) => e('rect', { x:U(u1), y:V(cs), width:u2 - u1, height:ce - cs, fill });
+      band(0, 2, '#f4f7fd'); band(2, 4, '#f4f7fd'); band(4, STRIP, '#e9e9e9'); band(STRIP, STRIP + DOORU, '#e8f3e8');
+      const mid = (cs + ce) / 2;
+      tv(U((4 + STRIP) / 2) + 0.035, V(mid), 'scrap, 11/16 in', { 'font-size':0.09, fill:'#5d6475' });
+      tv(U(STRIP + DOORU / 2) + 0.035, V(mid), 'DOOR piece (7 5/16 × 12): keep, no cuts here', { 'font-size':0.09, fill:'#2e7d32', 'font-weight':650 });
+      // plate cells and the crosscuts
+      for (let k = 0; k < 7; k++) {
+        const xm = k < 6 ? (k + 0.5) * PITCH : (6 * PITCH + 12) / 2;
+        if (xm < cs || xm > ce) continue;
+        [[1, k + 1], [3, k + 7]].forEach(([u, no]) => t(U(u), V(xm) + 0.04, k < 6 ? `plate ${no}` : 'scrap ¾', { 'font-size':k < 6 ? 0.13 : 0.09, fill:k < 6 ? '#2f6fde' : '#5d6475', 'font-weight':k < 6 ? 650 : 400 }));
+      }
+      for (let k = 1; k <= 6; k++) {
+        const x = k * PITCH;
+        if (x < cs || x > ce) continue;
+        e('line', { x1:U(0), y1:V(x), x2:U(4), y2:V(x), stroke:'#2f6fde', 'stroke-width':0.01, 'stroke-dasharray':'0.08 0.04' });
+        [0.15, 1.85, 2.15, 3.85].forEach(u => dot(u, x, '#2f6fde'));
+        t(R + 0.12, V(x) + 0.035, `${FR[k]} in`, { 'font-size':0.1, fill:'#2f6fde', 'text-anchor':'start' });
+      }
+      // the three long cuts, pricked near each end and at 3 and 9 in
+      [[STRIP, '① 4 11/16 in: door off first', 0.02], [2, '② 2 in', 0.014], [4, '③ 4 in', 0.014]].forEach(([u, lab, w]) => {
+        e('line', { x1:U(u), y1:V(cs), x2:U(u), y2:V(ce), stroke:'#c8402e', 'stroke-width':w });
+        [0.15, 3, 9, 11.85].filter(x => x >= cs && x <= ce).forEach(x => dot(u, x, '#c8402e'));
+        tv(U(u) - 0.06, V(cs + 1.0), lab, { 'font-size':0.1, fill:'#c8402e', 'font-weight':650 });
+      });
+      // the sheet's factory edge and end, and the join between the pages
+      e('line', { x1:U(0), y1:V(cs), x2:U(0), y2:V(ce), stroke:'#1c2030', 'stroke-width':0.02 });
+      tv(U(0) - 0.12, V(mid), 'SHEET EDGE (factory edge): trim the paper along this line', { 'font-size':0.1, 'font-weight':650 });
+      const endX = n === 1 ? 0 : 12, endY = V(endX) + (n === 1 ? -0.1 : 0.2);
+      e('line', { x1:U(0), y1:V(endX), x2:R, y2:V(endX), stroke:'#1c2030', 'stroke-width':0.02 });
+      t((U(0) + R) / 2, endY, 'SHEET END (factory edge): trim the paper along this line', { 'font-size':0.1, 'font-weight':650 });
+      if (n === 1) {
+        e('line', { x1:U(-0.5), y1:V(JOIN), x2:R + 0.3, y2:V(JOIN), stroke:'#1c2030', 'stroke-width':0.012, 'stroke-dasharray':'0.07 0.05' });
+        t((U(0) + R) / 2, V(JOIN) + 0.2, '✂ trim page 1 here (6 in), then lay it on page 2', { 'font-size':0.1, 'font-weight':650 });
+      } else {
+        e('rect', { x:U(-0.5), y:V(xa), width:R + 0.3 - U(-0.5), height:LAP, fill:'#fff1cc' });
+        t((U(0) + R) / 2, V(xa) + 0.29, 'page 1 goes over this band', { 'font-size':0.1, fill:'#8a6d1a' });
+        e('line', { x1:U(-0.5), y1:V(JOIN), x2:R + 0.3, y2:V(JOIN), stroke:'#1c2030', 'stroke-width':0.008 });
+        t(R + 0.12, V(JOIN) - 0.06, '6 in: page 1’s edge', { 'font-size':0.09, 'text-anchor':'start' });
+      }
+      // scale bar
+      const by = V(ce) + 0.6;
+      e('rect', { x:W / 2 - 1, y:by - 0.06, width:2, height:0.12, fill:'#1c2030' });
+      e('rect', { x:W / 2, y:by - 0.06, width:1, height:0.12, fill:'#fff', stroke:'#1c2030', 'stroke-width':0.01 });
+      t(W / 2, by + 0.25, 'This bar must measure exactly 2 in (print at 100 %, “actual size”).', { 'font-size':0.1 });
+    };
+    page('sheet1', 1); page('sheet2', 2);
+  }
+
+  document.getElementById('printSheet').addEventListener('click', () => {
+    document.body.classList.add('print-sheet');
+    const done = () => { document.body.classList.remove('print-sheet'); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    window.print();
+    setTimeout(done, 1000);
+  });
+
+  document.getElementById('printPlate').addEventListener('click', () => {
+    document.body.classList.add('print-plate');
+    const done = () => { document.body.classList.remove('print-plate'); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    window.print();
+    setTimeout(done, 1000);
+  });
+
+  document.getElementById('printTpl').addEventListener('click', () => {
+    document.body.classList.add('print-template');
+    const done = () => { document.body.classList.remove('print-template'); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    window.print();
+    setTimeout(done, 1000);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel templates: side, ceiling, back</title>
+<!-- Panel templates. 11 Nov 2026 redesign (user): the ceiling comes down to 6 3/4 in above the floor (the base's top);
+     the front is ONE sloped polycarbonate panel, the 8 3/8 x 12 piece that already has the screen opening, standing
+     on the base and leaning back to the ceiling (no separate front wall); the ceiling is 12 in wide, rests on the
+     side walls' top edges and slides out the back, with a 3/4 in slot round the column so the tubes needn't be exactly
+     upright; the back door fits under it. Templates for the sides, the ceiling and the back door, each printed in two
+     parts on letter paper. (10 Nov 2026 first version: side / lid / front for the old 7.6 in box.) -->
+<style>
+  :root { --bg:#eef0f4; --panel:#ffffff; --ink:#1c2030; --muted:#5d6475; --line:#d5d9e2; --accent:#2f6fde;
+          --warn:#b4541a; --warnbg:#fff4ea; --bad:#c8402e; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 system-ui, sans-serif; }
+  main { max-width:900px; margin:0 auto; padding:16px 16px 60px; }
+  a { color:var(--accent); }
+  h1 { font-size:22px; margin:4px 0 2px; }
+  h2 { font-size:17px; margin:0 0 4px; }
+  p { margin:6px 0; color:var(--muted); }
+  header .top { display:flex; gap:14px; flex-wrap:wrap; font-size:13px; }
+  header .top a { text-decoration:none; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; margin:14px 0; padding:12px 14px; }
+  .card ol, .card ul { margin:6px 0; padding-left:22px; } .card li { margin:5px 0; }
+  .note { background:var(--warnbg); border-left:4px solid var(--warn); border-radius:6px; padding:7px 10px; margin:8px 0; font-size:14px; color:var(--ink); }
+  .btns { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
+  button.big { font:inherit; font-size:14px; padding:6px 12px; background:var(--accent); color:#fff; border:1px solid var(--accent); border-radius:6px; cursor:pointer; }
+  button.big.alt { background:#fff; color:var(--accent); }
+  .inputs { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:8px 18px; margin:10px 0; }
+  .inputs label { display:flex; flex-direction:column; font-size:13px; color:var(--muted); gap:2px; }
+  .inputs input { font:inherit; font-size:15px; padding:4px 6px; border:1px solid var(--line); border-radius:6px; background:#fff; color:var(--ink); width:100%; }
+  #warns div { color:var(--bad); font-weight:600; font-size:14px; margin:4px 0; }
+  .scroll { overflow-x:auto; }
+  table { border-collapse:collapse; font-size:13.5px; margin:6px 0; min-width:100%; }
+  th, td { text-align:left; padding:4px 10px 4px 0; border-bottom:1px solid var(--line); vertical-align:top; font-variant-numeric:tabular-nums; }
+  td:first-child { font-weight:600; }
+  #shape svg { display:block; width:100%; max-width:620px; height:auto; margin:6px auto; }
+  #sheets svg { display:block; width:100%; max-width:620px; height:auto; margin:12px auto; border:1px dashed var(--line); border-radius:8px; background:#fff; }
+  @media print {
+    @page { size:letter portrait; margin:0.4in; }
+    html, body { background:#fff; }
+    main { padding:0; margin:0; max-width:none; }
+    main > *:not(#sheets-card) { display:none !important; }
+    #sheets-card > *:not(#sheets) { display:none !important; }
+    #sheets-card { border:0; padding:0; margin:0; background:#fff; }
+    #sheets svg { width:7.2in !important; height:9.7in !important; max-width:none; margin:0; border:0; border-radius:0; break-after:page; }
+    #sheets svg.skip { display:none !important; }
+    #sheets svg.last { break-after:auto; }
+  }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="top"><a href="./">3D model</a><a href="build.html">Build checklist</a><a href="stands.html">Stands &amp; templates</a><a href="box.html">Box &amp; cutting</a><a href="panels.html">Panel templates</a><a href="paint.html">Painting guide</a><a href="arms.html">Arms &amp; collars</a><a href="rings.html">Rings</a></div>
+  <h1>Panel templates: side, ceiling, back</h1>
+  <p>The lower box (11 Nov 2026): the ceiling at 6¾ in, one sloped front panel from the floor to the ceiling, a
+    ceiling that slides out the back. Full-size paper templates for the two sides, the ceiling and the back door. All
+    sizes in inches; heights are from the floor of the box (the top of the base).</p>
+</header>
+
+<div class="card" id="shape">
+  <h2>1. The new shape</h2>
+  <svg id="sideView" xmlns="http://www.w3.org/2000/svg"></svg>
+  <ul>
+    <li><b>Front:</b> the 8⅜ × 12 polycarbonate piece with the screen opening, screen end up. It stands on the base,
+      its outside face flush with the base's front edge, and leans back until its top corner meets the ceiling. It is
+      12 in wide, so it covers the sides' sloped front edges and is glued to them; no separate front wall.</li>
+    <li><b>Sides:</b> ⅛ in acrylic, as tall as the ceiling's underside, the front corner cut to the panel's slope.</li>
+    <li><b>Ceiling:</b> ⅛ in polycarbonate, 12 in wide (no width cut). It lies on the side walls' top edges and the
+      front panel's top corner, not glued. A ¾ in slot from its back edge goes round the column, so it slides out the
+      back without touching the arms, and the tubes needn't be exactly upright. It is no longer the column's top bearing.</li>
+    <li><b>Back door:</b> lift-off as before, on its magnets, now sitting under the ceiling: the ceiling slides out
+      over its top edge.</li>
+    <li><b>The collar under the lid on Neptune's tube is dropped</b> (the collars above hold the tubes down).</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>2. Numbers</h2>
+  <div class="inputs">
+    <label>Ceiling height: floor to the ceiling's underside <input id="hc"></label>
+    <label>Front panel length (its long edges, measured) <input id="fl"></label>
+    <label>Gap between the sides (measured, sides taped to the base) <input id="gap"></label>
+    <label>Column centre from the back edge of the box <input id="cb"></label>
+    <label>Column centre from the left side's outside face <input id="cl"></label>
+    <label>Dremel guide offset (straightedge to the nearest edge of the slot) <input id="g" placeholder="not measured yet"></label>
+  </div>
+  <div id="warns"></div>
+  <div class="scroll"><table id="results"></table></div>
+  <p>Fractions like 6 3/4 can be typed as they are. The <b>sides and the ceiling</b> can be printed now. Print the
+    <b>back door</b> after the sides are taped to the base: type in the gap you measure. Measure the column where it
+    passes the ceiling's height (to the tube's centre: its near edge plus 13/64) before printing the ceiling.</p>
+  <div class="btns">
+    <button class="big" data-print="all">Print all 6 pages</button>
+    <button class="big alt" data-print="side">Side (2 pages)</button>
+    <button class="big alt" data-print="ceil">Ceiling (2 pages)</button>
+    <button class="big alt" data-print="door">Back door (2 pages)</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>3. How to use them</h2>
+  <ol>
+    <li><b>Print portrait at 100 %</b> ("actual size", not "fit to page"). Check the 2 in bar on every page with a ruler.</li>
+    <li><b>Trim the paper</b> along the lines marked ✂ and stick it on the sheet, film still on, each trimmed edge
+      flush on a factory edge. Glue stick, or tape all round. Cut straight through the paper.</li>
+    <li><b>Side and ceiling:</b> the two pages each go in their own corner of the sheet and overlap in the middle.
+      The long cut runs across both: check the red line runs straight on from one page to the other.</li>
+    <li><b>Back door:</b> part 1 in the bottom left corner; part 2's trimmed edge on part 1's MATCH LINE.</li>
+    <li><b>Check with a ruler before cutting.</b> Each page prints the distances to check.</li>
+  </ol>
+  <div class="note"><b>Red</b> = cut line: the edge of the piece you keep. The pink band is the ⅛ in bit, on the waste
+    side. <b>Blue</b> = the straightedge's edge (shaded side = the straightedge), arrow = push this way. Holes: prick
+    the centre through the paper, then drill.</div>
+</div>
+
+<div class="card" id="sheets-card">
+  <h2>4. The pages</h2>
+  <p>Side, front end · Side, back end · Ceiling, left end · Ceiling, right end · Back door, part 1 · Back door, part 2.</p>
+  <div id="sheets"></div>
+</div>
+</main>
+<script>
+(() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, a, parent) => { const n = document.createElementNS(NS, tag); for (const k in a) n.setAttribute(k, a[k]); parent.appendChild(n); return n; };
+  const gcd = (a, b) => b ? gcd(b, a % b) : a;
+  function frac(x, den = 32) {                       // nearest 1/den as a mixed fraction
+    let n = Math.round(x * den), w = Math.floor(n / den), r = n - w * den;
+    if (!r) return `${w}`;
+    const g = gcd(r, den), f = `${r / g}/${den / g}`;
+    return w ? `${w} ${f}` : f;
+  }
+  const num = raw => { const m = raw.match(/^(?:(\d+(?:\.\d+)?)\s+)?(\d+)\s*\/\s*(\d+)$/); return m ? (+(m[1] || 0)) + m[2] / m[3] : parseFloat(raw); };
+  const $ = id => document.getElementById(id);
+  const RED = '#c8402e', BLUE = '#2f6fde', INK = '#1c2030', MUTED = '#5d6475', PINK = '#f6c9c1', KEEP = '#f6f8fc';
+  const W = 7.2, H = 9.7, BIT = 0.125, B = 0.13;     // page (in), bit width, drawn width of the straightedge band
+  const PT = 0.118, SHEET = 12, SLOT = 0.75, MATCH = 6.5, CLR = 1 / 32;   // polycarbonate thickness, ceiling slot width
+
+  const KEYS = ['hc', 'fl', 'gap', 'cb', 'cl', 'g'];
+  const DEF = { hc:6.75, fl:8.375, gap:11.75, cb:3.75, cl:6, g:null };
+  let S = Object.assign({}, DEF);
+  try { const b = JSON.parse(localStorage.getItem('boxPage3') || '{}'); if (typeof b.g === 'number') S.g = b.g; } catch (e) {}   // the offset typed on the box page
+  try { const s = JSON.parse(localStorage.getItem('panelsPage2') || '{}'); for (const k in DEF) if (s[k] != null) S[k] = s[k]; } catch (e) {}
+  try { const q = new URLSearchParams(location.search);          // ?hc=6.75&g=0.63 … (inches)
+        KEYS.forEach(k => { const v = parseFloat(q.get(k)); if (isFinite(v) && v > 0) S[k] = v; }); } catch (e) {}
+  function save() {
+    try { localStorage.setItem('panelsPage2', JSON.stringify(S));
+          const b = JSON.parse(localStorage.getItem('boxPage3') || '{}'); b.g = S.g; localStorage.setItem('boxPage3', JSON.stringify(b)); } catch (e) {}
+  }
+  const fill = () => KEYS.forEach(k => { $(k).value = S[k] == null ? '' : String(+S[k].toFixed(4)); });
+  function read() {
+    KEYS.forEach(k => {
+      const raw = $(k).value.trim().replace(',', '.'), v = num(raw), ok = raw !== '' && isFinite(v) && v > 0;
+      S[k] = ok ? v : (k === 'g' ? null : DEF[k]);
+    });
+  }
+
+  // ---- the box's side profile. z = in back from the base's front edge, y = up from the floor ----
+  // The panel stands on its inside bottom corner; its outside face is flush with the base's front edge at the bottom
+  // and its outside top corner just meets the ceiling: PT sin(t) + L cos(t) = ceiling height.
+  function geom() {
+    const L = S.fl, Hc = S.hc;
+    let t = 0.6; for (let i = 0; i < 60; i++) { const f = PT * Math.sin(t) + L * Math.cos(t) - Hc, df = PT * Math.cos(t) - L * Math.sin(t); t -= f / df; }
+    const a = PT * Math.cos(t);                        // the side's sloped edge starts this far back at the floor
+    const zs = a + Hc * Math.tan(t);                   // ... and meets its top edge this far back
+    const ztop = L * Math.sin(t);                      // the panel's outside top corner (the ceiling's front edge)
+    const ceilD = SHEET - ztop;
+    return { t, deg:t * 180 / Math.PI, a, zs, ztop, ceilD, topLen:SHEET - zs, doorH:Hc - CLR, doorW:S.gap - 2 * CLR, ok:isFinite(t) && t > 0.2 && t < 1.2 };
+  }
+  function results(G) {
+    const row = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`, f = v => `${v.toFixed(3)} in (${frac(v)})`;
+    $('results').innerHTML =
+      row('Front panel leans back', `${G.deg.toFixed(1)}° from upright (was 35°)`) +
+      row('Side: height at the back', f(S.hc)) +
+      row('Side: sloped edge', `from ${frac(G.a)} in back from the front corner at the floor, to ${frac(G.zs)} in back along the top edge`) +
+      row('Side: top edge', f(G.topLen)) +
+      row('Ceiling', `12 wide × ${f(G.ceilD)} deep, slot ${frac(SLOT)} wide to ${frac(S.cb + SLOT / 2)} in from its back edge`) +
+      row('Back door', `${f(G.doorW)} wide × ${f(G.doorH)} tall, 1 in finger hole 0.9 below its top`);
+    const w = [];
+    if (!G.ok) w.push('These numbers don’t make a box: check the ceiling height and the panel length.');
+    if (S.fl < S.hc + 0.3) w.push('The front panel is barely longer than the ceiling is high: it would stand nearly upright.');
+    if (S.gap < 11.4 || S.gap > 11.95) w.push('The gap should be close to 11.75 in (a 12 in base less two ⅛ in sides): measure again.');
+    if (Math.abs(S.cl - 6) > 0.5 || Math.abs(S.cb - 3.75) > 0.5) w.push('The column should be close to 6 in from the side and 3¾ from the back: measure again.');
+    if (S.g != null && S.g > 1.2) w.push('A guide offset over 1.2 in looks wrong: measure from the straightedge to the nearest edge of the slot.');
+    $('warns').innerHTML = w.map(x => `<div>${x}</div>`).join('');
+  }
+
+  // ---- side view sketch (section 1) ----
+  function sketch(G) {
+    const s = $('sideView'); s.innerHTML = ''; s.setAttribute('viewBox', '-1.6 -1.0 16.6 9.2');
+    const e = (tag, a) => el(tag, a, s), X = z => 12 - z, Y = y => 7 - y;           // front on the right
+    const t = (x, y, str, a = {}) => { const q = e('text', Object.assign({ x, y, 'font-size':0.32, 'font-family':'system-ui, sans-serif', fill:INK, 'text-anchor':'middle' }, a)); q.textContent = str; return q; };
+    e('rect', { x:0, y:Y(0), width:12, height:0.25, fill:'#cfd8e6' }); t(6, Y(0) + 0.6, 'base, 12 deep', { fill:MUTED });
+    e('polygon', { points:`${X(G.a)},${Y(0)} ${X(G.zs)},${Y(S.hc)} 0,${Y(S.hc)} 0,${Y(0)}`, fill:'#dfeaff', stroke:'#8fb8e8', 'stroke-width':0.03 });
+    t(3.2, Y(3.4), 'SIDE', { 'font-size':0.45, 'font-weight':650, fill:BLUE });
+    e('rect', { x:0, y:Y(S.hc) - PT, width:X(G.ztop), height:PT, fill:'#9fc3ef' });
+    t(3.2, Y(S.hc) - 0.3, `ceiling: rests on the sides, slides out the back`, { 'font-size':0.3 });
+    const c = Math.cos(G.t), sn = Math.sin(G.t), ob = [0, PT * sn], ot = [S.fl * sn, PT * sn + S.fl * c], ib = [PT * c, 0], it = [PT * c + S.fl * sn, S.fl * c];
+    e('polygon', { points:[ob, ot, it, ib].map(([z, y]) => `${X(z)},${Y(y)}`).join(' '), fill:'#7fa8de' });
+    const sc0 = 0.53, sc1 = 4.59;                                                                   // the screen opening, from the panel's top edge
+    e('line', { x1:X(ot[0] - sc0 * sn), y1:Y(ot[1] - sc0 * c), x2:X(ot[0] - sc1 * sn), y2:Y(ot[1] - sc1 * c), stroke:'#111', 'stroke-width':0.12 });
+    t(X(1.0) + 0.9, Y(3.0), `front panel ${frac(S.fl)}`, { 'text-anchor':'start' }); t(X(1.0) + 0.9, Y(3.0) + 0.4, `${G.deg.toFixed(1)}° from upright`, { 'text-anchor':'start' });
+    t(X(ot[0] - 2.5 * sn) + 0.75, Y(ot[1] - 2.5 * c) - 0.35, 'screen', { 'text-anchor':'start', fill:'#111' });
+    e('line', { x1:-0.4, y1:Y(0), x2:-0.4, y2:Y(S.hc), stroke:INK, 'stroke-width':0.02 }); t(-0.75, Y(S.hc / 2), `${frac(S.hc)}`, { transform:`rotate(-90 -0.75 ${Y(S.hc / 2)})` });
+    e('circle', { cx:X(SHEET - S.cb), cy:Y(S.hc) - PT / 2, r:0.1, fill:'#c9a24a' }); e('line', { x1:X(SHEET - S.cb), y1:Y(S.hc) - 1.6, x2:X(SHEET - S.cb), y2:Y(0), stroke:'#c9a24a', 'stroke-width':0.2, opacity:0.5 });
+    t(X(SHEET - S.cb), Y(S.hc) - 1.75, 'column', { fill:'#9a7a2a' });
+    t(0.2, Y(0) + 1.1, '← back (door, ceiling slides out)', { 'text-anchor':'start', fill:MUTED }); t(12, Y(0) + 1.1, 'front →', { 'text-anchor':'end', fill:MUTED });
+  }
+
+  // ---- one printed page: 7.2 x 9.7 in, portrait; all coordinates are inches on the paper ----
+  let pages = 0;
+  function page(cls, draw) {
+    const s = el('svg', { class:cls, viewBox:`0 0 ${W} ${H}`, width:W + 'in', height:H + 'in' }, $('sheets'));
+    const id = 'feed' + (pages++);
+    const e = (tag, a) => el(tag, a, s);
+    const mk = el('marker', { id, viewBox:'0 0 10 10', refX:8, refY:5, markerWidth:5, markerHeight:5, orient:'auto' }, e('defs', {}));
+    el('path', { d:'M0,0 L10,5 L0,10 z', fill:BLUE }, mk);
+    e('rect', { x:0, y:0, width:W, height:H, fill:'#fff' });
+    const t = (x, y, str, a = {}) => { const q = e('text', Object.assign({ x, y, 'font-size':0.1, 'font-family':'system-ui, sans-serif', fill:INK, 'text-anchor':'middle' }, a)); q.textContent = str; return q; };
+    const tv = (x, y, str, a = {}) => t(x, y, str, Object.assign({ transform:`rotate(-90 ${x} ${y})` }, a));
+    const k = { e, t, tv,
+      keep: pts => e('polygon', { points:pts.map(p => p.join(',')).join(' '), fill:KEEP }),
+      lines: (x, y, arr, a = {}, dy = 0.16) => arr.forEach((str, i) => t(x, y + i * dy, str, a)),
+      // a cut: the red line is the kept piece's edge, the pink band (the bit) lies on the waste side (wx, wy)
+      cut(x1, y1, x2, y2, wx, wy) {
+        e('polygon', { points:`${x1},${y1} ${x2},${y2} ${x2 + BIT * wx},${y2 + BIT * wy} ${x1 + BIT * wx},${y1 + BIT * wy}`, fill:PINK });
+        e('line', { x1, y1, x2, y2, stroke:RED, 'stroke-width':0.014 });
+      },
+      // the straightedge for a cut: on the kept piece (nx, ny), its edge the guide offset from the line; the tool is
+      // pushed so the straightedge is on its left. `at` (0..1) places the arrow and label along the line.
+      fence(x1, y1, x2, y2, nx, ny, lab, at = 0) {
+        if (S.g == null) return;
+        const g = S.g, ax = x1 + g * nx, ay = y1 + g * ny, bx = x2 + g * nx, by = y2 + g * ny;
+        e('polygon', { points:`${ax},${ay} ${bx},${by} ${bx + B * nx},${by + B * ny} ${ax + B * nx},${ay + B * ny}`, fill:'#dbe7fb' });
+        e('line', { x1:ax, y1:ay, x2:bx, y2:by, stroke:BLUE, 'stroke-width':0.012, 'stroke-dasharray':'0.1 0.05' });
+        const dx = -ny, dy = nx, along = (x2 - x1) * dx + (y2 - y1) * dy;        // push direction
+        let sx = along > 0 ? ax : bx, sy = along > 0 ? ay : by;                   // where the push starts
+        sx += (bx - ax) * at * Math.sign(along); sy += (by - ay) * at * Math.sign(along);
+        const ox = -nx * 0.07, oy = -ny * 0.07;
+        e('line', { x1:sx + dx * 0.35 + ox, y1:sy + dy * 0.35 + oy, x2:sx + dx * 1.05 + ox, y2:sy + dy * 1.05 + oy, stroke:BLUE, 'stroke-width':0.02, 'marker-end':`url(#${id})` });
+        let ang = Math.atan2(dy, dx) * 180 / Math.PI; const flip = ang > 90 || ang < -90; if (flip) ang += 180;
+        const cx = sx + dx * 1.25 + nx * 0.065, cy = sy + dy * 1.25 + ny * 0.065;
+        t(cx, cy, lab, { 'font-size':0.085, fill:BLUE, 'font-weight':650, 'text-anchor':flip ? 'end' : 'start', 'dominant-baseline':'central', transform:`rotate(${ang} ${cx} ${cy})` });
+      },
+      hole(cx, cy, r) {
+        e('circle', { cx, cy, r, fill:'#fff', stroke:RED, 'stroke-width':0.012 });
+        e('line', { x1:cx - r - 0.1, y1:cy, x2:cx + r + 0.1, y2:cy, stroke:RED, 'stroke-width':0.008 }); e('line', { x1:cx, y1:cy - r - 0.1, x2:cx, y2:cy + r + 0.1, stroke:RED, 'stroke-width':0.008 });
+        e('circle', { cx, cy, r:0.02, fill:RED });
+      },
+      trim: (x1, y1, x2, y2) => e('line', { x1, y1, x2, y2, stroke:INK, 'stroke-width':0.02 }),
+      match: (x, y1, y2) => e('line', { x1:x, y1, x2:x, y2, stroke:INK, 'stroke-width':0.012, 'stroke-dasharray':'0.16 0.06 0.03 0.06' }),
+      tick: (x, y, dx, dy) => e('line', { x1:x, y1:y, x2:x + dx, y2:y + dy, stroke:INK, 'stroke-width':0.008 }),
+      bar(x, y, short) {
+        e('rect', { x, y:y - 0.05, width:2, height:0.1, fill:INK }); e('rect', { x:x + 1, y:y - 0.05, width:1, height:0.1, fill:'#fff', stroke:INK, 'stroke-width':0.01 });
+        t(x + 1, y + 0.2, short ? 'Must measure exactly 2 in (print at 100 %)' : 'This bar must measure exactly 2 in (print at 100 %, portrait).');
+      },
+      nog: (x, y, a = {}) => { if (S.g == null) t(x, y, 'No straightedge lines yet: type the guide offset into the page and print again.', Object.assign({ fill:BLUE }, a)); },
+    };
+    draw(k);
+  }
+
+  function build() {
+    $('sheets').innerHTML = ''; pages = 0;
+    const G = geom(); if (!G.ok) return;
+    const off = S.g == null ? '' : ` · guide offset ${S.g.toFixed(3)} in`, Hc = S.hc, hcT = `${frac(Hc)} (${Hc.toFixed(2)})`;
+
+    // ---- SIDE: the LEFT side seen from outside, front on the right. x = in from the BACK end, y = up from the bottom ----
+    const YB = 9.5, V = y => YB - y, TOP = V(Hc);
+    const xc = SHEET - G.zs, xf = SHEET - G.a;                       // the sloped cut: top end, bottom end
+    const sl = Math.hypot(xf - xc, Hc), snx = -Hc / sl, sny = (xf - xc) / sl;   // its normal toward the kept piece (paper: y down)
+    const side = (front) => page('side', k => {
+      const ox = front ? W - 0.2 - SHEET : 0.2, X = x => ox + x;
+      k.keep(front ? [[0, YB], [X(xf), YB], [X(xc), TOP], [0, TOP]] : [[X(0), YB], [W, YB], [W, TOP], [X(0), TOP]]);
+      k.t(W / 2, 0.3, `SIDE · page ${front ? 1 : 2} of 2 · ${front ? 'FRONT' : 'BACK'} END · ⅛ in acrylic · full size · left side seen from outside`, { 'font-size':0.13, 'font-weight':650 });
+      k.lines(W / 2, 0.52, front ? [
+        'Trim the paper along BOTTOM EDGE and FRONT END. Set that corner on a bottom corner of the 12 × 12 sheet (film on), stick it down flat.',
+        'Page 2 goes in the other bottom corner and overlaps this one. Cut ① first, right across both pages, then ② the sloped front edge.',
+        `Check with a ruler: the top line is ${hcT} above the bottom edge at both ends.` + off,
+        'RIGHT side: the mirror image, no holes. Cut this one, check it on the base, then trace it onto the second sheet.'] : [
+        'Trim the paper along BOTTOM EDGE and BACK END. Set that corner on the other bottom corner of the same sheet, over page 1.',
+        'The red top line must run straight on from page 1. Clamp the straightedge across both pages for cut ①.',
+        `Check with a ruler: the top line is ${hcT} above the bottom edge at both ends.` + off], { fill:MUTED });
+      k.nog(W / 2, front ? 1.2 : 1.05);
+      k.cut(0, TOP, W, TOP, 0, -1);
+      k.fence(0, TOP, W, TOP, 0, 1, '① straightedge for the TOP cut');
+      k.t(front ? 0.1 : X(0.3), TOP - 0.2, `① TOP of the side: ${hcT} up (the ceiling's underside). Cut right across the sheet, edge to edge.`, { 'font-size':0.105, 'font-weight':650, fill:RED, 'text-anchor':'start' });
+      if (front) {
+        k.cut(X(xf), YB, X(xc), TOP, -snx, -sny);
+        const ext = 0.3, ux = (X(xc) - X(xf)) / sl, uy = (TOP - YB) / sl;
+        k.fence(X(xf) - ext * ux, YB - ext * uy, X(xc) + ext * ux, TOP + ext * uy, snx, sny, '② straightedge for the SLOPED cut', 0.15);
+        k.t(X(xc) + 0.9, V(Hc - 1.1), '② sloped front edge', { 'font-size':0.11, 'font-weight':650, fill:RED, 'text-anchor':'start' });
+        k.t(X(xc) + 0.9, V(Hc - 1.1) + 0.15, `waste · ${G.deg.toFixed(1)}° from upright`, { fill:RED, 'text-anchor':'start' });
+        k.tick(X(xc), TOP, 0, 0.22); k.t(X(xc) - 0.05, TOP + 0.34, `② ends ${frac(G.zs)} from the front`, { 'font-size':0.085, 'text-anchor':'end' });
+        k.tick(X(xf), YB, 0, -0.25); k.t(X(xf) - 0.08, YB - 0.3, `② starts ${frac(G.a)} in from the corner`, { 'font-size':0.09, 'text-anchor':'end' });
+        k.t(X(xf) - 0.08, YB - 0.17, '(the panel\'s outside then lines up with the base)', { 'font-size':0.075, fill:MUTED, 'text-anchor':'end' });
+        k.hole(X(SHEET - 4.0), V(1.3), 10 / 25.4);
+        k.lines(X(SHEET - 4.0) - 0.55, V(1.3) - 0.1, ['SWITCH: 20 mm hole', 'step bit, slowly, scrap under', 'centre 4 from the front, 1.3 up'], { 'font-size':0.09, fill:RED, 'text-anchor':'end' }, 0.13);
+        k.t(1.3, V(3.6), 'LEFT SIDE', { 'font-size':0.3, 'font-weight':650, fill:BLUE });
+        k.t(1.3, V(3.6) + 0.22, 'this face = the OUTSIDE', { 'font-size':0.11 });
+        k.bar(0.3, V(2.8), true);
+        k.tick(X(6), YB, 0, -0.45); k.t(X(6) + 0.05, YB - 0.34, '6 in: middle of the sheet', { 'font-size':0.085, fill:MUTED, 'text-anchor':'start' });
+        k.trim(0, YB, W, YB); k.t(3.4, YB - 0.07, '✂ BOTTOM EDGE (factory edge, stands on the base): trim along this line', { 'font-size':0.11, 'font-weight':650 });
+        k.trim(X(SHEET), 1.6, X(SHEET), H); k.tv(X(SHEET) - 0.08, YB - 2.2, '✂ FRONT END (factory edge): trim along this line', { 'font-size':0.11, 'font-weight':650 });
+      } else {
+        k.t(4.3, V(Hc - 1.6), 'LEFT SIDE', { 'font-size':0.3, 'font-weight':650, fill:BLUE });
+        k.t(4.3, V(Hc - 1.6) + 0.22, 'back end · this face = the OUTSIDE of the box', { 'font-size':0.11 });
+        k.bar(3.3, V(Hc - 2.6));
+        k.hole(X(1.0), V(1.2), 4 / 25.4);
+        k.lines(X(1.45), V(1.2) - 0.03, ['CHARGING SOCKET: drill 5/16 in, file to 8 mm', 'centre 1 in from the back, 1 3/16 (1.2) up'], { 'font-size':0.09, fill:RED, 'text-anchor':'start' }, 0.13);
+        k.tick(X(6), YB, 0, -0.3); k.t(X(6) - 0.05, YB - 0.2, '6 in from the back: middle of the sheet', { 'font-size':0.085, fill:MUTED, 'text-anchor':'end' });
+        k.trim(0, YB, W, YB); k.t(3.2, YB - 0.07, '✂ BOTTOM EDGE (factory edge, stands on the base): trim along this line', { 'font-size':0.11, 'font-weight':650 });
+        k.trim(X(0), 1.6, X(0), H); k.tv(X(0) + 0.14, V(Hc / 2), '✂ BACK END (factory edge): trim along this line', { 'font-size':0.11, 'font-weight':650 });
+      }
+    });
+    side(true); side(false);
+
+    // ---- CEILING: seen from above, back edge at the top of the page. x = in from the left end, y = in from the back edge ----
+    const CY = 0.25, D = G.ceilD, FY = CY + D, sx0 = S.cl - SLOT / 2, sx1 = S.cl + SLOT / 2;
+    const ceil = (left) => page('ceil', k => {
+      const ox = left ? 0.2 : W - 0.2 - SHEET, X = x => ox + x, Y = y => CY + y;
+      k.keep([[left ? X(0) : 0, CY], [left ? W : X(SHEET), CY], [left ? W : X(SHEET), FY], [left ? X(0) : 0, FY]]);
+      k.e('rect', { x:X(sx0), y:CY, width:SLOT, height:S.cb, fill:'#fff' });                    // the slot: waste
+      k.cut(0, FY, W, FY, 0, 1);
+      k.fence(0, FY, W, FY, 0, -1, '① straightedge for the FRONT-EDGE cut', left ? 0.05 : 0.45);
+      k.hole(X(S.cl), Y(S.cb), SLOT / 2);
+      k.cut(X(sx0), CY - 0.25, X(sx0), Y(S.cb), 1, 0);
+      k.cut(X(sx1), CY - 0.25, X(sx1), Y(S.cb), -1, 0);
+      k.fence(X(sx0), CY - 0.25, X(sx0), Y(S.cb), -1, 0, '③ straightedge, slot LEFT cut', 0.1);
+      k.fence(X(sx1), CY - 0.25, X(sx1), Y(S.cb), 1, 0, '④ straightedge, slot RIGHT cut', 0.1);
+      k.tv(X(S.cl) + 0.035, Y(S.cb / 2), 'SLOT · waste', { 'font-size':0.1, 'font-weight':650, fill:RED });
+      const lx = left ? X(S.cl) - 1.0 : X(S.cl) + 1.0, la = left ? 'end' : 'start';
+      k.lines(lx, Y(S.cb) + 0.45, [`② ${frac(SLOT)} in HOLE first (step bit), centre on the column:`, `${frac(S.cb)} from the back edge, ${frac(S.cl)} from the left end`,
+        '③ ④ then the two slot cuts, from the back edge into the hole', `(the tube gets ${frac(SLOT / 2 - 13 / 64, 64)} in of play each way)`], { 'font-size':0.09, fill:RED, 'text-anchor':la }, 0.13);
+      k.t(left ? 2.6 : 4.6, Y(D - 2.2), 'CEILING', { 'font-size':0.3, 'font-weight':650, fill:BLUE });
+      k.t(left ? 2.6 : 4.6, Y(D - 2.2) + 0.22, `12 wide × ${frac(D)} deep · ⅛ in polycarbonate · not glued`, { 'font-size':0.11 });
+      k.bar(left ? 1.6 : 3.6, Y(D - 1.5));
+      k.t(W / 2, FY + 0.32, `① FRONT EDGE of the ceiling: ${frac(D)} (${D.toFixed(2)}) from the back edge, right across the sheet`, { 'font-size':0.11, 'font-weight':650, fill:RED });
+      k.t(W / 2, FY + 0.7, `CEILING · ${left ? 'LEFT' : 'RIGHT'} END · page ${left ? 1 : 2} of 2 · full size · seen from above`, { 'font-size':0.13, 'font-weight':650 });
+      k.lines(W / 2, FY + 0.92, left ? [
+        'Trim the paper along BACK EDGE and LEFT END. Set that corner on a corner of a 12 × 12 polycarbonate sheet (film on), stick it down flat.',
+        'Page 2 goes in the other back corner; the slot is on both pages, so they must agree there. Cut ① right across both, then ② ③ ④.',
+        `Check with a ruler: the front-edge line is ${frac(D)} from the back edge at both ends,`,
+        `and the slot is centred ${frac(S.cl)} from the left end.` + off,
+        'It lies on the side walls\' top edges and the front panel\'s top corner. To take it off: slide it straight out the back.'] : [
+        'Trim the paper along BACK EDGE and RIGHT END. Set that corner on the other back corner of the same sheet, over page 1.',
+        'The slot and the red front-edge line must land on page 1\'s. Cut ① right across both pages.' + off], { fill:MUTED });
+      k.nog(W / 2, FY + (left ? 1.62 : 1.3));
+      k.trim(0, CY, W, CY); k.t(left ? 2.4 : 4.8, CY + 0.16, '✂ BACK EDGE (factory edge): trim along this line', { 'font-size':0.11, 'font-weight':650 });
+      const ex = left ? X(0) : X(SHEET);
+      k.trim(ex, 0, ex, FY + 0.3); k.tv(ex + (left ? 0.14 : -0.06), Y(D / 2 + 1.2), `✂ ${left ? 'LEFT' : 'RIGHT'} END (factory edge): trim along this line`, { 'font-size':0.11, 'font-weight':650 });
+    });
+    ceil(true); ceil(false);
+
+    // ---- BACK DOOR: seen from behind. x = in from the left end, y = up from the bottom ----
+    const DB = 9.5, DY = y => DB - y, dH = G.doorH, dW = G.doorW, DT = DY(dH), fhx = dW / 2, fhy = dH - 0.9;
+    page('door', k => {                                              // part 1: the left end
+      const X = x => 0.2 + x;
+      k.keep([[X(0), DB], [W, DB], [W, DT], [X(0), DT]]);
+      k.t(3.4, 0.4, 'BACK DOOR · part 1 of 2 · LEFT END · ⅛ in acrylic · full size', { 'font-size':0.13, 'font-weight':650 });
+      k.lines(3.4, 0.62, [
+        'The door piece you have (7 5/16 × 12). Trim the paper along BOTTOM EDGE and LEFT END, set that corner on its bottom left corner.',
+        'Part 2 butts against the MATCH LINE. Cut ① across the top (both parts), then ② the right end (on part 2), then the finger hole.',
+        `Drawn for a gap of ${frac(S.gap)} between the sides: the door is ${frac(dW)} × ${frac(dH)}, 1/32 under the opening each way.` + off,
+        'It sits on the base between the sides, under the ceiling: the ceiling slides out over its top edge.'], { fill:MUTED });
+      k.nog(3.4, 1.3);
+      k.cut(0, DT, W, DT, 0, -1);
+      k.fence(0, DT, W, DT, 0, 1, '① straightedge for the TOP cut', 0.5);
+      k.t(0.35, DT - 0.2, `① TOP of the door: ${frac(dH)} above the bottom edge (just under the ceiling)`, { 'font-size':0.11, 'font-weight':650, fill:RED, 'text-anchor':'start' });
+      if (X(fhx) + 0.5 < W) { k.hole(X(fhx), DY(fhy), 0.5); k.t(X(fhx) + 0.5, DY(fhy) + 0.75, `FINGER HOLE 1 in (step bit): centre ${frac(fhx)} from the left end, 0.9 below the top`, { 'font-size':0.09, fill:RED, 'text-anchor':'end' }); }
+      k.t(2.8, DY(dH / 2) + 0.3, 'BACK DOOR', { 'font-size':0.3, 'font-weight':650, fill:BLUE });
+      k.t(2.8, DY(dH / 2) + 0.52, 'magnets on the inside face, as before', { 'font-size':0.11 });
+      k.bar(1.8, DY(dH / 2) + 1.2);
+      k.match(X(MATCH), DT - 0.3, DB); k.tv(X(MATCH) + 0.13, DY(1.6), `MATCH LINE, ${frac(MATCH)} from the left end`, { 'font-size':0.1, 'font-weight':650 });
+      k.trim(0, DB, W, DB); k.t(3.2, DB - 0.07, '✂ BOTTOM EDGE (factory edge, stands on the base): trim along this line', { 'font-size':0.11, 'font-weight':650 });
+      k.trim(X(0), DT - 0.6, X(0), H); k.tv(X(0) + 0.14, DY(dH / 2), '✂ LEFT END (factory edge): trim along this line', { 'font-size':0.11, 'font-weight':650 });
+    });
+    page('door', k => {                                              // part 2: the right end, cut to the gap
+      const X = x => 0.2 + x - MATCH, ex = X(dW), sx = X(SHEET);
+      k.keep([[X(MATCH), DB], [ex, DB], [ex, DT], [X(MATCH), DT]]);
+      k.t(2.6, 0.4, 'BACK DOOR · part 2 of 2 · RIGHT END · full size', { 'font-size':0.13, 'font-weight':650 });
+      k.lines(2.6, 0.62, [
+        'Trim the paper along BOTTOM EDGE and the MATCH LINE. Lay the trimmed',
+        'left edge on part 1\'s match line, the bottom edge flush on the door\'s',
+        `bottom edge. Check with a ruler: cut ② is ${frac(dW)} from the LEFT END.` + off], { fill:MUTED });
+      k.nog(2.6, 1.15, { 'font-size':0.085 });
+      k.cut(0, DT, ex, DT, 0, -1);
+      k.cut(ex, DT - 0.6, ex, DB + 0.15, 1, 0);
+      k.fence(0, DT, ex, DT, 0, 1, '① straightedge for the TOP cut', 0.1);
+      k.fence(ex, DT - 0.6, ex, DB + 0.15, -1, 0, '② straightedge, END cut', 0.1);
+      k.t(0.35, DT - 0.2, `① TOP: ${frac(dH)} above the bottom edge`, { 'font-size':0.11, 'font-weight':650, fill:RED, 'text-anchor':'start' });
+      k.tv(ex + 0.4, DY(dH / 2), `② RIGHT END: ${frac(dW)} from the left end`, { 'font-size':0.11, 'font-weight':650, fill:RED });
+      if (sx < W) { k.e('line', { x1:sx, y1:DT - 0.6, x2:sx, y2:DB + 0.15, stroke:MUTED, 'stroke-width':0.008, 'stroke-dasharray':'0.05 0.05' }); k.tv(sx + 0.13, DY(1.0), 'sheet edge', { 'font-size':0.085, fill:MUTED }); }
+      if (X(fhx) + 0.5 > 0.25) k.hole(X(fhx), DY(fhy), 0.5);
+      k.t(2.6, DY(dH / 2) + 0.3, 'BACK DOOR', { 'font-size':0.3, 'font-weight':650, fill:BLUE });
+      k.t(2.6, DY(dH / 2) + 0.52, 'right end', { 'font-size':0.11 });
+      k.bar(1.6, DY(dH / 2) + 1.2);
+      k.trim(0, DB, W, DB); k.t(2.6, DB - 0.07, '✂ BOTTOM EDGE (factory edge): trim along this line', { 'font-size':0.11, 'font-weight':650 });
+      k.trim(X(MATCH), DT - 0.6, X(MATCH), H); k.tv(X(MATCH) + 0.14, DY(dH / 2), '✂ MATCH LINE: trim along this line', { 'font-size':0.11, 'font-weight':650 });
+    });
+  }
+
+  function update() { const G = geom(); results(G); if (G.ok) sketch(G); build(); }
+  KEYS.forEach(id => $(id).addEventListener('change', () => { read(); save(); fill(); update(); }));
+  fill(); update();
+
+  function only(which) {                                           // hide the pages that aren't wanted, mark the last one printed
+    const all = [...document.querySelectorAll('#sheets svg')]; let last = null;
+    all.forEach(s => { const on = which === 'all' || s.classList.contains(which); s.classList.toggle('skip', !on); s.classList.remove('last'); if (on) last = s; });
+    if (last) last.classList.add('last');
+  }
+  document.querySelectorAll('button[data-print]').forEach(b => b.addEventListener('click', () => {
+    only(b.dataset.print);
+    const done = () => { only('all'); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    window.print();
+  }));
+  only('all');
+})();
+</script>
+</body>
+</html>

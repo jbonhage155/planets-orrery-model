@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arms and collars</title>
+<!-- Arms page (8 Nov 2026): collars per tube, arm cut lengths (live, from the elbow offset and
+     how deep the rod sits in the collar), gluing the rod straight, Uranus/Neptune collar heights,
+     gaps between planets, and LINE UP calibration. Numbers: parts-list.md H19, P (24 Oct layout). -->
+<style>
+  :root { --bg:#0b1026; --card:#151c3b; --ink:#f3f5ff; --muted:#aab3d6; --line:#2a335c; --accent:#ffd34d; --good:#4cd47a; --warn:#ffb4a8; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.5 system-ui, sans-serif; }
+  body { background:radial-gradient(1200px 600px at 70% -10%, #1d2a6b 0%, transparent 60%), var(--bg); min-height:100vh; }
+  main { max-width:1000px; margin:0 auto; padding:16px 16px 60px; }
+  a { color:var(--accent); }
+  .top { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; }
+  .top a { text-decoration:none; }
+  h1 { font-size:32px; margin:10px 0 4px; letter-spacing:.01em; }
+  h1 span { color:var(--accent); }
+  .lead { color:var(--muted); margin:0 0 16px; font-size:18px; }
+  nav.toc { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 18px; }
+  nav.toc a { text-decoration:none; font-size:14px; background:#1f2850; border:1px solid var(--line); border-radius:999px; padding:4px 12px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 18px; margin:0 0 20px; }
+  section h2 { margin:0 0 8px; font-size:22px; }
+  section p { margin:6px 0; }
+  .note { color:var(--muted); font-size:15px; }
+  .warn { color:var(--warn); font-weight:600; }
+  .wrap { overflow-x:auto; margin:8px 0; }
+  table { border-collapse:collapse; width:100%; font-size:15.5px; }
+  th, td { text-align:left; padding:6px 10px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  th { color:var(--muted); font-weight:600; font-size:13px; text-transform:uppercase; letter-spacing:.05em; }
+  td.big { font-weight:750; color:var(--accent); font-size:17px; }
+  td.ok { color:var(--good); } td.loose { color:#ffc857; }
+  .dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:8px; vertical-align:-1px; }
+  ol, ul { margin:4px 0; padding-left:22px; } li { margin:5px 0; }
+  .inputs { display:flex; flex-wrap:wrap; gap:14px 22px; margin:10px 0; }
+  .inputs label { display:flex; align-items:center; gap:8px; font-size:15px; color:var(--muted); }
+  .inputs select { font:inherit; font-size:15px; background:#0f1530; color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:4px 8px; }
+  svg { display:block; width:100%; height:auto; max-width:860px; margin:6px 0; }
+  footer { color:var(--muted); font-size:13px; margin-top:24px; }
+  @media (max-width:420px) { h1 { font-size:26px; } section { padding:12px; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><a href="./">3D model</a><a href="build.html">Build checklist</a><a href="stands.html">Stands &amp; templates</a><a href="box.html">Box &amp; cutting</a><a href="paint.html">Painting guide</a><a href="arms.html">Arms &amp; collars</a><a href="rings.html">Rings</a></div>
+  <h1>Arms &amp; <span>collars</span></h1>
+  <p class="lead">Each planet's arm: a clamp collar on its brass tube, a straight 3/32 in rod out to an aquarium elbow, and a short upright to the planet. All sizes in inches.</p>
+  <nav class="toc"><a href="#collars">Which collar</a><a href="#cut">Cut lengths</a><a href="#glue">Gluing straight</a><a href="#heights">Uranus &amp; Neptune</a><a href="#gaps">Gaps</a><a href="#calibrate">Line up</a></nav>
+
+  <section id="collars">
+    <h2>1. Which collar goes on which tube</h2>
+    <div class="wrap"><table>
+      <thead><tr><th>Planet</th><th>Tube (outside)</th><th>Collar</th><th>Fit</th></tr></thead>
+      <tbody id="collarRows"></tbody>
+    </table></div>
+    <p><b>No collar under the lid (dropped 11 Nov 2026):</b> Uranus's collar is snug on Neptune's tube, a collar on top of Mercury's tube stops the stack floating up, and each arm's collar and weight hold the tube below it down. The ceiling now slides out the back round the column, so nothing has to go on before it.</p>
+    <p class="note">From the two 8-piece sets: two 5/16, two 3/8, two 7/16, and one each of 3/16, 7/32 and 1/4. The 1/8 and 1/2 are spare. On the three loose ones the split closes up when you tighten, and the epoxy fills what's left. Tighten only until snug: too tight crushes the thin tube onto the one inside, and then two planets turn together.</p>
+  </section>
+
+  <section id="cut">
+    <h2>2. How long to cut each arm rod</h2>
+    <svg viewBox="0 0 860 210" role="img" aria-label="Side view: column centre, tube, collar wall, rod, elbow and upright, with the measurements">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#aab3d6"/></marker></defs>
+      <line x1="60" y1="20" x2="60" y2="190" stroke="#aab3d6" stroke-dasharray="5 5"/>
+      <text x="60" y="14" fill="#aab3d6" font-size="13" text-anchor="middle">column centre</text>
+      <rect x="48" y="40" width="24" height="150" fill="#c9a24a"/>
+      <text x="60" y="205" fill="#c9a24a" font-size="13" text-anchor="middle">brass tube</text>
+      <rect x="72" y="80" width="56" height="44" rx="3" fill="#8f9bb8"/><rect x="20" y="80" width="28" height="44" rx="3" fill="#8f9bb8"/>
+      <text x="100" y="140" fill="#dfe4ff" font-size="13" text-anchor="middle">collar wall</text>
+      <rect x="92" y="98" width="640" height="8" fill="#e8ecf8"/>
+      <path d="M720 92 h40 v-60 h-24 v36 h-16 z" fill="#4c8fe0" opacity=".85"/>
+      <rect x="744" y="20" width="8" height="74" fill="#e8ecf8"/>
+      <circle cx="748" cy="20" r="16" fill="#ffd34d"/><text x="775" y="25" fill="#ffd34d" font-size="14">planet</text>
+      <text x="740" y="120" fill="#4c8fe0" font-size="13" text-anchor="middle">elbow</text>
+      <line x1="748" y1="40" x2="748" y2="190" stroke="#ffd34d" stroke-dasharray="4 5"/>
+      <line x1="92" y1="122" x2="92" y2="160" stroke="#aab3d6"/><line x1="732" y1="108" x2="732" y2="160" stroke="#aab3d6"/>
+      <line x1="94" y1="156" x2="730" y2="156" stroke="#ffd34d" stroke-width="2" marker-start="url(#ar)" marker-end="url(#ar)"/>
+      <text x="410" y="150" fill="#ffd34d" font-size="15" font-weight="700" text-anchor="middle">CUT LENGTH (rod)</text>
+      <line x1="734" y1="164" x2="746" y2="164" stroke="#aab3d6" marker-start="url(#ar)" marker-end="url(#ar)"/>
+      <text x="790" y="168" fill="#aab3d6" font-size="13" text-anchor="middle">elbow offset</text>
+      <line x1="62" y1="182" x2="746" y2="182" stroke="#aab3d6" marker-start="url(#ar)" marker-end="url(#ar)"/>
+      <text x="410" y="198" fill="#aab3d6" font-size="13" text-anchor="middle">orbit radius (column centre to the upright's centre)</text>
+      <line x1="92" y1="70" x2="128" y2="70" stroke="#aab3d6" marker-start="url(#ar)" marker-end="url(#ar)"/>
+      <text x="150" y="66" fill="#aab3d6" font-size="13">rod in ~3/16</text>
+    </svg>
+    <p>Cut length = orbit radius − how far the rod's inner end sits from the column's centre − the elbow offset. Where the rod goes in as deep as the collar wall, it touches the brass tube. Where the wall is thicker, it stops short, and the epoxy holds it.</p>
+    <div class="inputs">
+      <label>Rod depth in the collar <select id="ins"></select></label>
+      <label>Elbow offset <select id="elbow"></select></label>
+    </div>
+    <p class="note"><b>Elbow offset:</b> push a rod into one leg of an elbow as far as it goes, and measure from its end to the centre line of the other leg. Pick that above and the table updates. ⅛ until it's measured.</p>
+    <div class="wrap"><table>
+      <thead><tr><th>Planet</th><th>Orbit</th><th>Collar hole / wall</th><th>Rod end from centre</th><th>To upright centre</th><th>Cut length</th></tr></thead>
+      <tbody id="cutRows"></tbody>
+    </table></div>
+    <p class="note">* Mercury's collar wall wasn't measured; 3/16 assumed, like the other small collars. Cut lengths are to the nearest 1/16; halfway ones round up, since you can't add rod back and 1/16 off the orbit won't show. Cut Neptune, Uranus and Saturn first, one per 36 in rod; the shorter arms and the uprights come from what's left.</p>
+  </section>
+
+  <section id="glue">
+    <h2>3. Gluing the rod in straight</h2>
+    <p>Sideways play doesn't matter: once the epoxy cures, <b>LINE UP</b> calibration (below) takes whatever direction the arm points. The angle that matters is <b>up and down</b>, for the gaps between arms.</p>
+    <ol>
+      <li><b>Collar flat on the table</b>, on wax paper or a plastic bag. That makes its hole straight up and the arm hole dead level.</li>
+      <li><b>Plug its hole</b> with a scrap of the same-size tube (or a dowel) wrapped in tape. The arm end butts against it as it will against the real tube, and no epoxy gets in the hole. Snug the clamp screw on the plug.</li>
+      <li><b>Scuff</b> the last ½ in of the rod with sandpaper and wipe it with alcohol.</li>
+      <li><b>Prop the far end level:</b> on coins, washers or card, the same height as the middle of the arm hole (about 3/16 in). Gravity holds it square while it sets.</li>
+      <li><b>Epoxy</b> the end, push it in, and leave a small fillet round the rod at the collar.</li>
+      <li class="warn">Keep epoxy out of the split and off the clamp screw, or the collar won't tighten.</li>
+      <li><b>Cure:</b> 5-minute epoxy handles in an hour; give it 24 hours before a planet hangs on it.</li>
+    </ol>
+    <p><b>Check:</b> collar clamped on its tube, look from the side at eye level and turn the planet once. Same height all the way round = straight. If it rises and falls, the collar is tilted on the tube (most likely Mars, Saturn or Neptune, the loose ones): re-seat it and tighten evenly before the final epoxy.</p>
+    <p><b>Onto the tube: clamp only, no epoxy</b> (decided 9 Nov). Nothing can glue two tubes together, the arms come off for transport, and a grabbed planet slips instead of straining its servo. Clamp at any angle: LINE UP sets the direction.</p>
+    <ul>
+      <li><b>Loose collars</b> (Mars, Saturn, Neptune): one wrap of <b>electrical tape</b> on the tube under the collar. Butt the ends (an overlap tilts the collar), and keep it inside the collar's ⅜ in band, never down where the next tube out ends (Neptune: above the lid). If one of these arms starts to slip, snug its screw again.</li>
+      <li class="warn">Snug the screw, don't crank it: aluminium threads strip, and too tight squashes the thin tube onto the one inside. After each collar, check the tube inside it still turns freely.</li>
+    </ul>
+  </section>
+
+  <section id="heights">
+    <h2>4. Uranus and Neptune collar heights</h2>
+    <p>Neptune's tube top is at <b>8¼ in</b> (washers under it, 8 Nov), so its top is only about ¼ in below Uranus's. With both collars at their tube tops the two arms would be crowded. Nothing is outside Neptune's tube, so its collar doesn't have to be at the top:</p>
+    <div class="wrap"><table>
+      <thead><tr><th>Collar</th><th>Where</th><th>Arm at about</th></tr></thead>
+      <tbody>
+        <tr><td><span class="dot" style="background:#4b70dd"></span>Neptune</td><td>Low: its bottom about 1/16 in above the lid</td><td>7.9 in</td></tr>
+        <tr><td><span class="dot" style="background:#7de3e8"></span>Uranus</td><td>Its bottom about 1/32 in above Neptune's tube top</td><td>8.45 in</td></tr>
+      </tbody>
+    </table></div>
+    <p>That gives about ½ in between those two arms, like the rest. A bit of Neptune's tube shows above its collar, which is fine. (11 Nov 2026: the ceiling is now 6¾ in up, so Neptune's arm can go higher; these heights are from the old 7.6 in lid.)</p>
+    <ul>
+      <li>Only <b>Uranus's hole</b> is drilled off-centre (Neptune's collar sits low, but its hole is in the middle like the rest). Its collar sticks up past its own tube top by about ⅛ in, and above that it wraps Saturn's tube, so <b>drill its hole a little low</b> to keep the rod and its glue against Uranus's tube.</li>
+      <li><b>How low:</b> measure <b>g</b>, Neptune's tube top to Uranus's tube top. The hole's centre goes at most <b>g − ⅛ in</b> above the collar's bottom edge: g ¼ → ⅛ in; g about 9/32 → 5/32 in; g 5/16 or more → the middle (3/16 in).</li>
+      <li class="warn">Saturn's tube passes up through that overhang with only about 1/64 in to spare: keep epoxy out of the collar's bore when gluing the rod (plug it), and clamp only, no glue on the tube.</li>
+    </ul>
+    <p class="note">Keep the lid: it holds the top of the column (the stack is held at the post's foot and the lid's hole only), and it keeps fingers and dust out of the gears.</p>
+  </section>
+
+  <section id="gaps">
+    <h2>5. Gaps between the planets</h2>
+    <p>Edge to edge, every pair is about 1 1/16 in apart (laid out on the floor, 24 Oct). Rings take some of that:</p>
+    <div class="wrap"><table>
+      <thead><tr><th>Neighbours</th><th>Ball to ball</th><th>With rings</th></tr></thead>
+      <tbody id="gapRows"></tbody>
+    </table></div>
+    <p>Neighbours come closest when they line up on the same side of the Sun, so what counts is how far each ring reaches <b>toward the Sun and away from it</b>. A planet keeps its direction relative to its arm all the way round, so set each ring when you glue it:</p>
+    <ul>
+      <li><b>Saturn (3 in, 25°) and Neptune (2¼ in, 28°):</b> tilt toward the Sun, the low edge pointing in along the arm. The tilt pulls the reach in: Saturn about 1⅜ in from its centre, Neptune about 1 in.</li>
+      <li><b>Uranus (nearly upright):</b> ring facing the Sun, like a wheel rolling sideways along its orbit. Edge-on to the Sun it would reach the full 1⅛ in both ways.</li>
+    </ul>
+    <p class="note">Cutting and gluing the foam rings, with a printable full-size template and tilt gauges: <a href="rings.html">rings page</a>. Set that way, the tightest spot is about ⅝ in (Saturn's ring to Uranus). The planets all sit at one height and never touch.</p>
+  </section>
+
+  <section id="calibrate">
+    <h2>6. Travel mode (the home position)</h2>
+    <p>On the touchscreen's settings tab (gear icon). Do this after the epoxy has fully cured.</p>
+    <ol>
+      <li>In <b>AUTO</b>, tap <b>TRAVEL MODE</b> (called LINE UP until 13 Nov 2026). Every servo turns, forward only, to the home position: every arm pointing <b>away from the screen</b>, the planets in one row. This is the position for clamping the arms on and for carrying the model, and it stays through a restart.</li>
+      <li>One off the line? Tap <b>MANUAL</b> and tick it. For a big move, spin it near with the slider, then <b>STOP</b>.</li>
+      <li>Step it onto the line with <b>↺ 1°</b> and <b>↺ 10°</b> (they go the way Forward/Reverse is set).</li>
+      <li>Tap <b>SAVE HOME</b> twice (the second tap confirms). The screen says “Home saved: …”.</li>
+      <li>Tap <b>AUTO</b>: the arms go back to the line, so you can check. <b>Back to the date</b> (or Run, TIME MACHINE, Today) sends them to the date.</li>
+    </ol>
+    <p class="note"><b>Clamping the arms on:</b> tap TRAVEL MODE, wait for the servos to stop, then clamp each arm pointing straight away from the screen. That is its home: nothing to save. To test one, move it (Run, or MANUAL), then TRAVEL MODE again before clamping the next. Only an arm that ends up out of the row needs the steps above (SAVE HOME). The servo list shows <b>FROM ROW</b> for each arm. Calibration survives power-offs (the servo and tube gears are both 40-tooth, one turn for one turn); redo a planet only if its gear or collar slips.</p>
+  </section>
+
+  <footer>Orbits from the 24 Oct 2026 floor layout; collar walls measured 8 Nov 2026. Details: parts-list.md (H19 collars, D10 elbows, P layout) in the repo.</footer>
+</main>
+<script>
+(() => {
+  // name, colour, orbit radius, tube outside, collar hole, collar wall (in), wall measured?
+  const P = [
+    ['Mercury', '#9a9a9a', 3.5, 3/16, 3/16, 3/16, false],
+    ['Venus', '#e6c27a', 5.4375, 7/32, 7/32, 3/16, true],
+    ['Earth', '#3f7fd8', 7.5, 1/4, 1/4, 3/16, true],
+    ['Mars', '#d2563a', 9.5, 9/32, 5/16, 3/16, true],
+    ['Jupiter', '#d9a46a', 12.1875, 5/16, 5/16, 3/16, true],
+    ['Saturn', '#e8cf94', 15.4375, 11/32, 3/8, 1/4, true],
+    ['Uranus', '#7de3e8', 18.3125, 3/8, 3/8, 1/4, true],
+    ['Neptune', '#4b70dd', 21, 13/32, 7/16, 1/4, true],
+  ];
+  const gcd = (a, b) => b ? gcd(b, a % b) : a;
+  // Nearest 1/32 as a mixed fraction ("5 3/16"); `den` 64 for the small numbers.
+  function frac(x, den = 32) {
+    let n = Math.round(x * den), w = Math.floor(n / den), r = n - w * den;
+    if (!r) return `${w}`;
+    const g = gcd(r, den), f = `${r / g}/${den / g}`;
+    return w ? `${w} ${f}` : f;
+  }
+  const dot = c => `<span class="dot" style="background:${c}"></span>`;
+
+  document.getElementById('collarRows').innerHTML = P.map(([n, c, , tube, hole]) => {
+    const exact = Math.abs(tube - hole) < 1e-9;
+    return `<tr><td>${dot(c)}${n}</td><td>${frac(tube)}</td><td class="big">${frac(hole)}</td>` +
+           `<td class="${exact ? 'ok' : 'loose'}">${exact ? 'Exact' : '1/32 loose'}</td></tr>`;
+  }).join('');
+
+  const choices = (el, vals, pick) => {
+    el.innerHTML = vals.map(v => `<option value="${v}"${v === pick ? ' selected' : ''}>${frac(v)} in</option>`).join('');
+  };
+  const ins = document.getElementById('ins'), elbow = document.getElementById('elbow');
+  choices(ins, [1/8, 5/32, 3/16, 7/32, 1/4], 3/16);
+  choices(elbow, [0, 1/32, 1/16, 3/32, 1/8, 5/32, 3/16, 7/32, 1/4, 5/16, 3/8], 1/8);
+  try { const s = JSON.parse(localStorage.getItem('armsPage') || '{}');
+        if (s.ins) ins.value = s.ins; if (s.elbow) elbow.value = s.elbow; } catch (e) {}
+
+  function cut() {
+    const d = +ins.value, e = +elbow.value;
+    try { localStorage.setItem('armsPage', JSON.stringify({ ins:ins.value, elbow:elbow.value })); } catch (err) {}
+    document.getElementById('cutRows').innerHTML = P.map(([n, c, orbit, tube, hole, wall, measured]) => {
+      const end = hole / 2 + Math.max(wall - d, 0);          // rod's inner end from the column centre
+      const toUp = orbit - end, len = toUp - e;
+      const touch = d >= wall ? ' (touches tube)' : '';
+      return `<tr><td>${dot(c)}${n}</td><td>${frac(orbit)}</td><td>${frac(hole)} / ${frac(wall)}${measured ? '' : '*'}</td>` +
+             `<td>${frac(end, 64)}${touch}</td><td>${frac(toUp)}</td><td class="big">${frac(len, 16)}</td></tr>`;   // nearest 1/16; halfway rounds up (long is safe)
+    }).join('');
+  }
+  ins.addEventListener('change', cut); elbow.addEventListener('change', cut);
+  cut();
+
+  // Gaps: ball sizes (20 Oct) and orbits (24 Oct); ring reach toward/away from the Sun, as set in section 5.
+  const B = [['Sun', '#ffb84a', 0, 4], ...P.map(([n, c, o]) => [n, c, o, { Mercury:.79, Venus:1, Earth:1, Mars:.79, Jupiter:2.4, Saturn:2, Uranus:1.6, Neptune:1.6 }[n]])];
+  const RING = { 'Jupiter-Saturn':'Saturn’s ring: about ⅝–11/16', 'Saturn-Uranus':'Both rings: about ⅜–⅝',
+                 'Uranus-Neptune':'Both rings: about 7/16–⅞' };
+  document.getElementById('gapRows').innerHTML = B.slice(1).map(([n, c, o, s], i) => {
+    const [pn, pc, po, ps] = B[i], gap = o - po - s / 2 - ps / 2;
+    return `<tr><td>${dot(pc)}${pn} – ${dot(c)}${n}</td><td>${frac(gap, 16)}</td><td>${RING[pn + '-' + n] || ''}</td></tr>`;
+  }).join('');
+})();
+</script>
+</body>
+</html>

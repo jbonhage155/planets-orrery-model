@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Orrery</title>
+<!-- The Pi's touchscreen page (800x480), served by server.py. Same layout as the
+     front-panel mock-up on the website (site/index.html, drawTouch), but it draws the
+     Pi's live state from /api/state and sends every tap to /api/action. -->
+<style>
+  html, body { margin:0; height:100%; background:#000; overflow:hidden; touch-action:none; user-select:none; -webkit-user-select:none; }
+  body { display:flex; align-items:center; justify-content:center; }
+  #stage { position:relative; width:100vw; height:60vw; max-height:100vh; max-width:166.67vh; container-type:size; }
+  #s { width:100%; height:100%; display:block; }
+  /* PLANETS tab: the 3D globe (planets.js) sits over x 8-348, y 128-434 of the 800x480 screen. */
+  #p3 { position:absolute; left:1%; top:26.667%; width:42.5%; height:63.75%; display:none; border-radius:1.5% / 2.5%; touch-action:none; }
+  /* Facts hidden: the globe fills everything below the planet buttons (y 128-480;
+     up to 452 when the red problem banner is showing). */
+  #stage.full #p3 { left:0; width:100%; height:73.333%; border-radius:0; }
+  #stage.full.banner #p3 { height:67.5%; }
+  /* Sizes in cqw (1cqw = 8 px of the 800 px screen) so they scale with the canvas. */
+  #p3btn { position:absolute; left:37.25%; top:28.33%; height:5.5cqw; min-width:5.5cqw; display:none; align-items:center; justify-content:center; gap:1cqw;
+           padding:0 1cqw; box-sizing:border-box; border-radius:1.2cqw; border:1px solid rgba(255,255,255,.25); background:rgba(20,27,56,.78);
+           color:#fff; font:600 2.2cqw system-ui, sans-serif; touch-action:manipulation; }
+  #p3btn svg { width:2.8cqw; height:2.8cqw; }
+  #stage.full #p3btn { left:auto; right:1.25%; padding:0 1.8cqw; }
+  #p3hint { position:absolute; left:0; right:0; bottom:3%; text-align:center; color:rgba(215,225,255,.9); font:500 2cqw system-ui, sans-serif;
+            text-shadow:0 0 .6cqw #000; pointer-events:none; opacity:0; transition:opacity .8s; }
+  #p3hint.on { opacity:1; }
+  #p3credit { position:absolute; left:1.25%; bottom:1.2%; color:rgba(150,160,200,.65); font:500 1.4cqw system-ui, sans-serif; pointer-events:none; display:none; }
+  #stage.full #p3credit { display:block; }
+  /* RUN tab (the SOLAR SYSTEM view until 7 Nov 2026; class 'sys'): the 3D view fills everything
+     below the tabs (y 64-480): Run / Pause top right, the date bottom left and the speed
+     control bottom right (7 Nov 2026, the user; 13 Nov 2026: bigger buttons, no credit line,
+     a soft shade under the date so it reads over the planets). */
+  #stage.sys #p3 { left:0; top:13.333%; width:100%; height:86.667%; border-radius:0; }
+  #stage.sys.banner #p3 { height:80.833%; }
+  #sysfade { position:absolute; left:0; right:0; bottom:0; height:34%; display:none; pointer-events:none;
+             background:linear-gradient(to bottom, rgba(2,3,10,0), rgba(2,3,10,.82)); }
+  #stage.sys #sysfade { display:block; }
+  #sysinfo { position:absolute; left:2.25%; bottom:3.6%; color:#fff; font:700 5cqw system-ui, sans-serif; letter-spacing:-.02em; text-shadow:0 0 1cqw #000; pointer-events:none; display:none; }
+  #sysinfo small { display:flex; align-items:center; gap:1cqw; margin-top:.5cqw; color:#c9d3f2; font:500 2cqw system-ui, sans-serif; letter-spacing:0; }
+  #sysinfo small i { width:1.4cqw; height:1.4cqw; border-radius:50%; flex:none; }
+  #sysrun { position:absolute; right:1.5%; top:15.4%; height:8cqw; min-width:19cqw; padding:0 2.6cqw; display:none; align-items:center; justify-content:center; border-radius:2cqw;
+            border:1px solid rgba(255,255,255,.22); background:rgba(20,27,56,.86); color:#fff; font:700 3cqw system-ui, sans-serif; touch-action:manipulation;
+            box-shadow:0 .5cqw 2cqw rgba(0,0,0,.5); }
+  #sysrun.go { background:linear-gradient(#37b56a, #278a50); border-color:rgba(190,255,215,.4); }
+  #stage.sys #sysinfo { display:block; }
+  /* TIME TRAVEL: the same 3D solar system on the right, under the moment's name and date
+     (x 306-794, y 142-472 of the 800x480 screen). */
+  /* (16 Nov 2026, the user: a narrower, lighter list and a bigger picture) the 3D view fills
+     everything right of the 200 px list, below the tabs (x 200-800, y 64-480). */
+  #stage.trav #p3 { display:block; left:25%; top:13.333%; width:75%; height:86.667%; border-radius:0; }
+  #stage.trav.banner #p3 { height:80.833%; }
+  #stage.sys #sysrun { display:flex; }
+  /* RUN speed:  -  N yr/min  +  bottom right; the buttons 80 x 72 px (13 Nov 2026, the user: bigger to press). */
+  #sysspeed { position:absolute; right:1.5%; bottom:3.6%; height:9cqw; display:none; align-items:stretch; border-radius:2cqw; overflow:hidden;
+              border:1px solid rgba(255,255,255,.22); background:rgba(20,27,56,.92); color:#fff; box-shadow:0 .5cqw 2cqw rgba(0,0,0,.5); }
+  #sysspeed button { width:10cqw; border:0; background:rgba(255,255,255,.09); color:#fff; font:700 5.6cqw system-ui, sans-serif; line-height:1; touch-action:manipulation; }
+  #sysspeed button:active { background:rgba(120,160,255,.35); }
+  #sysspeed button:disabled { color:rgba(255,255,255,.22); background:rgba(255,255,255,.03); }
+  #sysspeed span { min-width:15cqw; display:flex; flex-direction:column; align-items:center; justify-content:center; font:700 3.2cqw system-ui, sans-serif; }
+  #sysspeed span small { color:#9aa6c9; font:600 1.6cqw system-ui, sans-serif; letter-spacing:.06em; }
+  #stage.sys #sysspeed { display:flex; }
+  #stage.sys.banner #sysinfo, #stage.sys.banner #sysspeed { bottom:9.5%; }   /* above the red banner */
+  #stage.sys #p3hint { bottom:auto; top:16.5%; right:24%; }                              /* clear of the date and the speed control */
+  /* TIME TRAVEL with no moment chosen (14 Nov 2026, the user): no heading, the picture fills
+     the panel and the date sits bottom right. */
+  /* The moment's name (small, in its colour) over its date and how long ago, bottom right
+     of the picture (16 Nov 2026; with no moment chosen, just the date). */
+  #travdate { position:absolute; right:2%; bottom:3%; text-align:right; color:#fff; font:700 3.4cqw system-ui, sans-serif; letter-spacing:-.02em;
+              text-shadow:0 0 1cqw #000, 0 0 .4cqw #000; pointer-events:none; display:none; }
+  #travdate b { display:block; font:700 2.1cqw system-ui, sans-serif; letter-spacing:0; margin-bottom:.2cqw; }
+  #travdate small { display:block; color:#ffd36b; font:600 1.9cqw system-ui, sans-serif; letter-spacing:0; margin-top:.3cqw; }
+  #stage.trav #travdate { display:block; }
+  #stage.trav.banner #travdate { bottom:9%; }
+  /* PLANETS, the dwarf planets' page: All / Ceres / Pluto / ... along the bottom of the globe. */
+  #dwarfs { position:absolute; left:1%; width:42.5%; bottom:12.6%; display:none; justify-content:center; gap:.5cqw; }
+  #dwarfs button { height:4.4cqw; padding:0 .75cqw; border-radius:1.1cqw; border:1px solid rgba(255,255,255,.22); background:rgba(20,27,56,.86); color:#c9d3f2;
+                   font:600 1.5cqw system-ui, sans-serif; touch-action:manipulation; }
+  #dwarfs button.on { background:#2f6fde; border-color:#8fb4ff; color:#fff; }
+  #stage.dw #dwarfs { display:flex; }
+  #stage.dw.full #dwarfs { left:0; width:100%; bottom:5.5%; gap:1cqw; }
+  #stage.dw.full #dwarfs button { height:6.5cqw; padding:0 2cqw; border-radius:1.6cqw; font:600 2.3cqw system-ui, sans-serif; }
+  #stage.dw.full.banner #dwarfs { bottom:11%; }
+  #stage.dw.full #p3hint { bottom:21%; }
+  /* SCALE tab: the 3D picture fills everything below the tabs; a line of text along the bottom. */
+  #stage.scl3d #p3 { left:0; top:13.333%; width:100%; height:86.667%; border-radius:0; }
+  /* GALAXY tab (14 Nov 2026): the 3D Milky Way fills everything below the tabs; the Facts button
+     (top right) brings in the words on the left (x 0-236) and the picture takes the rest. */
+  #stage.gal #p3 { left:0; top:13.333%; width:100%; height:86.667%; border-radius:0; }
+  #stage.gal.galfacts #p3 { left:29.5%; width:70.5%; }
+  #stage.gal.banner #p3 { height:80.833%; }
+  #stage.gal.galfacts #p3hint { left:29.5%; }
+  #galbtn { position:absolute; right:1.5%; top:15.4%; height:7cqw; padding:0 2.4cqw; display:none; align-items:center; justify-content:center; border-radius:1.8cqw;
+            border:1px solid rgba(255,255,255,.25); background:rgba(20,27,56,.82); color:#fff; font:700 2.6cqw system-ui, sans-serif; touch-action:manipulation;
+            box-shadow:0 .5cqw 2cqw rgba(0,0,0,.5); }
+  #stage.gal #galbtn { display:flex; }
+  #stage.gal.galfacts #galbtn { background:#2f6fde; border-color:#8fb4ff; }
+  /* TIME MACHINE countdown (14 Nov 2026): a big 3-2-1 over everything before the arms move. */
+  #count { position:absolute; inset:0; z-index:20; display:none; flex-direction:column; align-items:center; justify-content:center;
+           background:rgba(2,3,10,.88); color:#fff; font-family:system-ui, sans-serif; touch-action:none; }
+  #count.on { display:flex; }
+  #count .stand { color:#ffb300; font:800 5.6cqw system-ui, sans-serif; letter-spacing:.03em; }
+  #count .num { height:24cqw; display:flex; align-items:center; }
+  #count b { display:block; font:800 24cqw/1 system-ui, sans-serif; text-shadow:0 0 3cqw rgba(255,179,0,.45); animation:cdpop 1s ease-out both; }
+  #count .to { color:#dfe6ff; font:600 2.7cqw system-ui, sans-serif; }
+  #count small { margin-top:1.4cqw; color:#8fa0cf; font:600 2cqw system-ui, sans-serif; }
+  @keyframes cdpop { 0% { transform:scale(1.5); opacity:0; } 20% { transform:scale(1); opacity:1; } 100% { transform:scale(.88); opacity:.8; } }
+  body.kiosk { cursor:none; }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="s" width="800" height="480"></canvas><canvas id="p3"></canvas><div id="sysfade"></div>
+  <button id="p3btn" title="Hide or show the facts"></button><div id="p3credit"></div><div id="p3hint">Drag to look all round · pinch to zoom · double-tap to reset</div>
+  <div id="sysinfo"></div><button id="sysrun"></button><button id="galbtn">Facts</button><div id="travdate"></div><div id="dwarfs"></div>
+  <div id="sysspeed"><button id="sysslow">−</button><span id="sysypm"></span><button id="sysfast">+</button></div>
+  <div id="count"><div class="stand">Stand back!</div><div class="num"><b>3</b></div><div class="to"></div><small>Tap anywhere to stop</small></div>
+</div>
+<script src="three.min.js"></script>
+<script src="planets.js"></script>
+<script>
+// index.html?sim = no Pi: sim.js stands in for server.py (the website's front-panel mock-up).
+if (new URLSearchParams(location.search).has('sim')) document.write('<script src="sim.js"><\/script>');
+</script>
+<script>
+const cv = document.getElementById('s'), g = cv.getContext('2d');
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const COLORS = ['#9a9a9a','#e8c27a','#3a8ee6','#d9534f','#d8a06a','#e6d08a','#7fe0d8','#4666ff','#c9b29b'];
+const PV = window.PlanetView;
+// PLANETS tab: facts shown (globe on the left) or hidden (globe fills the screen). This
+// screen only. Every visit to the tab starts on Saturn with the facts showing (14 Nov 2026,
+// the user; for a while that day it opened with the globe full screen).
+const stage = document.getElementById('stage'), p3btn = document.getElementById('p3btn'), p3hint = document.getElementById('p3hint');
+const ICON = { grow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg>',
+               shrink:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 10h-6V4M4 14h6v6M14 10l7-7M10 14l-7 7"/></svg>' };
+let full = null, hintTimer = 0, lastMode = null;
+// The dwarf planets' page: 0 = all five together, 1 ... = one of PV.DWARFS. This screen only.
+let dwarf = 0;
+const dwarfRow = document.getElementById('dwarfs');
+['All together'].concat((PV.DWARFS || []).map(D => D.name)).forEach((name, k) => {
+  const b = document.createElement('button'); b.textContent = name;
+  b.addEventListener('click', () => { dwarf = k; draw(); });
+  dwarfRow.appendChild(b);
+});
+function hint(text) {                                        // shown for a few seconds
+  clearTimeout(hintTimer);
+  if (text) { p3hint.textContent = text; p3hint.classList.add('on'); hintTimer = setTimeout(() => p3hint.classList.remove('on'), 4500); }
+  else p3hint.classList.remove('on');
+}
+function setFull(on) {
+  if (on === full) return;
+  full = on; stage.classList.toggle('full', on);
+  p3btn.innerHTML = on ? ICON.shrink + 'Facts' : ICON.grow;
+  hint(on && 'Drag to look all round · pinch to zoom · double-tap to reset');
+}
+setFull(false);
+p3btn.addEventListener('click', () => { setFull(!full); draw(); });
+if (new URLSearchParams(location.search).has('kiosk')) document.body.classList.add('kiosk');
+
+let S = null, V = null, hits = [], offline = false, base = 0, shown = null, BG = null;
+
+// While running, the screen animates on its own at the display's frame rate: from the
+// Pi's last date (S.day, days since 2000-01-01) and speed it works out the in-between
+// date and planet angles; each poll just corrects it. Polls can then be slow (250 ms).
+const SIM = window.orrerySim;
+async function getState() {
+  const t0 = performance.now(), st = SIM ? SIM.state() : await (await fetch('/api/state', { cache:'no-store' })).json();
+  S = st; base = (t0 + performance.now()) / 2;              // mid-request ~ when the Pi answered
+  offline = false;
+}
+async function poll() {
+  try { await getState(); } catch (e) { offline = true; }
+  draw();
+  setTimeout(poll, S && S.running ? 250 : S && S.moving ? 120 : 350);
+}
+async function act(a) {
+  try {
+    if (SIM) SIM.act(a);
+    else await fetch('/api/action', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify(a) });
+    await getState();
+  } catch (e) { offline = true; }
+  draw();
+}
+// Dates for any day number, BC too (as planets.py): Julian calendar before 15 Oct 1582,
+// Gregorian after; year 0 = 1 BC.
+function calFromDay(day) {
+  const fl = Math.floor, Z = fl(Math.round(day) + 2451545), al = fl((Z - 1867216.25) / 36524.25), A = Z < 2299161 ? Z : Z + 1 + al - fl(al / 4);
+  const B = A + 1524, C = fl((B - 122.1) / 365.25), D = fl(365.25 * C), E = fl((B - D) / 30.6001), m = E < 14 ? E - 1 : E - 13;
+  return [m > 2 ? C - 4716 : C - 4715, m, B - D - fl(30.6001 * E)];
+}
+const yearText = y => y <= 0 ? `${1 - y} BC` : y < 1000 ? `${y} AD` : String(y);
+const deepText = () => `${(S.deep / 1e6).toLocaleString()} million years ago`;
+function view() {                                           // S, moved on to "now" if running
+  if (!S || !S.running) { shown = null; return S; }
+  const perS = S.years_per_min * 365.25 / 60;
+  let day = S.day + perS * (performance.now() - base) / 1000;
+  // A poll that lands a little behind would make the date tick backwards: hold instead
+  // (only for small gaps - a real jump such as a new start date is shown at once).
+  if (shown !== null && day < shown && shown - day < perS * 0.5 + 1) day = shown;
+  shown = day;
+  const dday = day - S.day;
+  return { ...S, day, ymd:calFromDay(day),
+           lon:S.lon.map((a, p) => a + S.mean[p] * dday) };
+}
+function frame() { if (S && (S.running || trip.t0)) draw(); requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+function at(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * 800 / r.width, (e.clientY - r.top) * 480 / r.height]; }
+cv.addEventListener('pointerdown', e => {
+  const [x, y] = at(e);
+  if (S && S.mode === 'health' && S.manual && mgauge && x >= mgauge.x0 - 24 && x <= mgauge.x1 + 24 && Math.abs(y - mgauge.y) <= 32) {
+    cv.setPointerCapture(e.pointerId); mdrag = { rpm:null, sent:0 }; mgaugeTo(x); return;
+  }
+  const hit = hits.find(h => x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h);
+  if (hit) { if (hit.a.do === 'home' || hit.a.do === 'unhome') { homeAsk = false; clearTimeout(homeAskTimer); } hit.a.local ? localTap(hit.a.local) : send(hit.a); }
+});
+// TIME MACHINE countdown (14 Nov 2026, the user: kids tap a moment and the arms swing at
+// once, before they've stepped back). A moment or GO first shows a big 3, 2, 1 over the
+// whole screen with where it's going; then the action is sent. Tap anywhere to stop it.
+// Not on the website (sim.js), where nothing moves; not for the moment already shown.
+// Also into and out of travel mode (the settings' TRAVEL MODE / Back to the date, and Run
+// on ORBITS while in travel mode), 14 Nov 2026, the user.
+const countEl = document.getElementById('count'), COUNT_S = 3;
+let counting = null;
+function willMove(a) {                                     // what the countdown says, or null: no countdown
+  if (SIM || !S) return null;
+  if (a.do === 'go') return 'Going to ' + longDate(S.entry);
+  if (a.do === 'lineup' && !!a.on !== S.lined_up) return a.on ? 'Going to travel mode' : 'Going back to the date';
+  if (a.do === 'press' && S.lined_up && !S.running && S.mode === 'run') return 'Leaving travel mode to run';
+  if (a.do === 'manual' && !a.on && S.manual) return S.lined_up ? 'Going back to travel mode' : 'Going back to the date';   // AUTO: every arm moves
+  if (a.do === 'tab' && (a.mode === 'travel' || a.mode === 'run') && S.manual && S.mode !== a.mode) return 'Leaving manual mode';   // TIME MACHINE / ORBITS switch to AUTO (server.py)
+  if (a.do === 'travel' && !(a.n === S.trip && !S.running && !S.lined_up))   // not if already there, or on its way
+    return 'Going to ' + (TRIPS[a.n].now ? 'today' : TRIPS[a.n].name);
+  return null;
+}
+function send(a) { const why = willMove(a); why ? countdown(a, why) : act(a); }
+function countdown(a, why) {
+  stopCount();
+  const t0 = performance.now();
+  counting = { a, timer:0 };
+  countEl.querySelector('.to').textContent = why;
+  const tick = () => {
+    const gone = performance.now() - t0, left = COUNT_S - Math.floor(gone / 1000);
+    if (left <= 0) { const go = counting.a; stopCount(); act(go); return; }
+    const num = countEl.querySelector('.num'), b = document.createElement('b');   // a new element restarts the pop
+    b.textContent = left; num.replaceChildren(b);
+    counting.timer = setTimeout(tick, 1000 - gone % 1000 + 5);
+  };
+  countEl.classList.add('on');
+  tick();
+}
+function stopCount() {
+  if (counting) clearTimeout(counting.timer);
+  counting = null; countEl.classList.remove('on');
+}
+countEl.addEventListener('pointerdown', e => { e.preventDefault(); stopCount(); });
+cv.addEventListener('pointermove', e => { if (mdrag) mgaugeTo(at(e)[0]); });
+['pointerup', 'pointercancel'].forEach(t => cv.addEventListener(t, () => {
+  if (mdrag && mdrag.rpm !== null) act({ do:'mspeed', rpm:mdrag.rpm });
+  mdrag = null;
+}));
+// Keyboard, for testing in a browser: arrows = choose (speed, moment), Enter = Run/GO, T = today.
+addEventListener('keydown', e => {
+  const k = { ArrowRight:{ do:'turn', n:1 }, ArrowUp:{ do:'turn', n:1 }, ArrowLeft:{ do:'turn', n:-1 }, ArrowDown:{ do:'turn', n:-1 },
+              Enter:{ do:'press' }, ' ':{ do:'press' }, t:{ do:'today' } }[e.key];
+  if (k) { e.preventDefault(); act(k); }
+});
+
+function button(x, y, w, h, label, fill, a, size = 30) {
+  g.fillStyle = fill; g.beginPath(); g.roundRect(x, y, w, h, 14); g.fill();
+  g.fillStyle = '#fff'; g.font = `600 ${size}px system-ui, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(label, x + w / 2, y + h / 2 + 1); g.textBaseline = 'alphabetic';
+  hits.push({ x, y, w, h, a });
+}
+function draw() {
+  hits = []; V = view();
+  g.fillStyle = BG || (BG = (() => { const q = g.createLinearGradient(0, 64, 0, 480); q.addColorStop(0, '#0d1433'); q.addColorStop(1, '#070a1b'); return q; })());
+  g.fillRect(0, 0, 800, 480);
+  if (!S) { PV.hide(); p3btn.style.display = 'none'; centre(offline ? 'Waiting for the orrery…' : 'Starting…'); return; }
+  if (S.off) {                                              // shutting down (the "poweroff" action; no button for it since 13 Nov 2026)
+    ['sys', 'trav', 'dw', 'scl', 'scl3d', 'gal', 'galfacts', 'banner'].forEach(c => stage.classList.remove(c));
+    PV.hide(); setFull(false); p3btn.style.display = 'none'; hint();
+    drawOff();
+    return;
+  }
+  // The orrery keeps running on the other tabs; the ORBITS tab says so. (7 Nov 2026: the old
+  // RUN screen went and SOLAR SYSTEM became RUN.)
+  // Four tabs and the settings gear (the Turn off button went 13 Nov 2026, the user: not needed).
+  // 14 Nov 2026 (the user): RUN is now ORBITS and TIME TRAVEL is TIME MACHINE, next to it
+  // (both move the planets). The modes inside are still 'run' and 'travel'.
+  // Five tabs since 14 Nov 2026 (GALAXY, between PLANETS and SCALE), all at one size: the
+  // widths (sum 736, the gear after) are each label's width at 21 px plus the same margin.
+  const runLabel = S.running && S.mode !== 'run' ? `ORBITS ▶ ${short(S.years_per_min)}` : 'ORBITS';
+  g.fillStyle = '#10173a'; g.fillRect(0, 0, 800, 64);
+  g.fillStyle = '#1d2750'; g.fillRect(0, 63, 800, 1);
+  let tx = 0;
+  [[runLabel, 'run', 126], ['TIME MACHINE', 'travel', 196], ['PLANETS', 'planets', 146], ['GALAXY', 'galaxy', 140], ['SCALE', 'scale', 128]].forEach(([label, m, tw]) => {
+    const on = S.mode === m;
+    if (on) tabPill(tx, tw);
+    g.fillStyle = on ? '#fff' : '#93a0c8'; g.font = fit(label, tw - 22, 21, 700); g.textAlign = 'center';
+    g.fillText(label, tx + tw / 2, 42);
+    hits.push({ x:tx, y:0, w:tw, h:64, a:{ do:'tab', mode:m } });
+    tx += tw;
+  });
+  healthTab(736, S.mode === 'health');
+  p3btn.style.display = S.mode === 'planets' && PV.ok ? 'flex' : 'none';
+  const wasSys = stage.classList.contains('sys');
+  stage.classList.toggle('sys', S.mode === 'run' && PV.ok);
+  stage.classList.toggle('trav', S.mode === 'travel' && S.editing === null && PV.ok);
+  if (S.mode === 'planets' && lastMode !== 'planets') { setFull(false); dwarf = 0; }
+  lastMode = S.mode;
+  stage.classList.toggle('dw', S.mode === 'planets' && PV.ok && !!PV.INFO[S.planet].dwarfs);
+  stage.classList.toggle('scl', S.mode === 'scale');
+  stage.classList.toggle('scl3d', S.mode === 'scale' && PV.ok);
+  if (S.mode === 'scale' && !wasScale) hint('One finger to spin · two fingers to zoom · tap a planet to fly to it · double-tap to reset');
+  wasScale = S.mode === 'scale';
+  stage.classList.toggle('gal', S.mode === 'galaxy' && PV.ok);
+  if (S.mode === 'galaxy' && !wasGalaxy) galFacts = false;      // every visit starts with the galaxy filling the screen
+  stage.classList.toggle('galfacts', S.mode === 'galaxy' && PV.ok && galFacts);
+  galBtn.textContent = galFacts ? 'Hide facts' : 'Facts';
+  if (S.mode === 'galaxy' && !wasGalaxy) hint('Drag to turn · pinch to zoom · tap "You are here" to fly in · double-tap to reset');
+  wasGalaxy = S.mode === 'galaxy';
+  if (S.mode === 'planets') drawPlanets();
+  else if (S.mode === 'travel') { setFull(false); drawTravel(); }
+  else if (S.mode === 'health') { PV.hide(); setFull(false); drawHealth(); }
+  else if (S.mode === 'scale') { setFull(false); drawScale(); }
+  else if (S.mode === 'galaxy') { setFull(false); drawGalaxy(); }
+  else { setFull(false); drawSystem(); }
+  stage.classList.toggle('banner', !!(offline || S.error));
+  if (offline || S.error) {
+    g.fillStyle = '#8a1f1f'; g.fillRect(0, 452, 800, 28); g.fillStyle = '#fff'; g.font = '500 16px system-ui, sans-serif'; g.textAlign = 'center';
+    g.fillText(offline ? 'Lost contact with the orrery - retrying' : 'Servo problem: ' + S.error.slice(0, 80), 400, 471);
+  }
+}
+function tabPill(x, w) {                                   // the tab that is showing: a raised blue pill
+  const q = g.createLinearGradient(0, 6, 0, 58); q.addColorStop(0, '#4a86f5'); q.addColorStop(1, '#2a5fd0');
+  g.fillStyle = q; g.beginPath(); g.roundRect(x + 5, 6, w - 10, 52, 14); g.fill();
+}
+function centre(text) { g.fillStyle = '#8fa3d8'; g.font = '600 32px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText(text, 400, 250); }
+
+function short(y) { return `${y.toLocaleString()} yr`; }
+function howMuch(y) { return y === 1 ? '1 year' : `${y.toLocaleString()} years`; }
+function drawMap(cx, cy, R, caption = true, names = false) {
+  let n = S.servo_names.length || 8;                      // the model's planets (no Pluto)
+  g.fillStyle = '#ffb300'; g.beginPath(); g.arc(cx, cy, R > 120 ? 13 : 9, 0, 7); g.fill();
+  for (let p = 0; p < n; p++) {
+    const r = 20 + (R - 20) * Math.sqrt((p + 1) / n), a = V.lon[p] * Math.PI / 180;   // counter-clockwise, seen from above
+    g.strokeStyle = '#1f2a52'; g.lineWidth = 1.5; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke();
+    if (p === 4) {                                       // the asteroid belt, between Mars and Jupiter
+      const rb = (r + 20 + (R - 20) * Math.sqrt(p / n)) / 2;
+      g.save(); g.strokeStyle = '#8d8472'; g.lineWidth = 3; g.setLineDash([1.5, 4]); g.beginPath(); g.arc(cx, cy, rb, 0, 7); g.stroke(); g.restore();
+    }
+    g.globalAlpha = S.servos.length && !S.servos[p] ? 0.35 : S.racing[p] ? 0.25 : 1;   // dim: servo missing, or too fast to track
+    if (S.racing[p]) { g.strokeStyle = COLORS[p]; g.lineWidth = 3; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke(); }  // a blur ring
+    const px = cx + r * Math.cos(a), py = cy - r * Math.sin(a), big = R > 120 ? 1.7 : 1;
+    g.fillStyle = COLORS[p]; g.beginPath(); g.arc(px, py, (p === 4 || p === 5 ? 7 : 5) * big, 0, 7); g.fill();
+    if (names) {                                         // big map: each planet's name beside it, away from the Sun
+      g.font = '600 12px system-ui, sans-serif'; g.textAlign = Math.cos(a) < -0.2 ? 'right' : Math.cos(a) > 0.2 ? 'left' : 'center';
+      const off = 12 * big; g.fillStyle = '#c9d3f2';
+      g.fillText(S.names[p], px + Math.cos(a) * off, py - Math.sin(a) * off + 4);
+    }
+    g.globalAlpha = 1;
+  }
+  if (!caption) return;
+  const on = S.servos.filter(Boolean).length; n = S.servos.length;
+  g.fillStyle = '#56628c'; g.font = '500 15px system-ui, sans-serif'; g.textAlign = 'center';
+  g.fillText(S.sim ? 'seen from above ↺ · simulation' : S.servos.length ? `seen from above ↺ · ${on} of ${n} planets connected` : 'seen from above ↺ · no servos (test mode)', cx, cy + R + 22);
+}
+// RUN tab (the SOLAR SYSTEM tab until 7 Nov 2026, when the old RUN screen was dropped): the
+// 3D view (planets.js) with the date, Run / Pause and the speed pill on it. A tap on a
+// planet (or the Sun) opens its PLANETS page.
+const sysinfo = document.getElementById('sysinfo'), sysrun = document.getElementById('sysrun');
+sysrun.addEventListener('click', () => send(S && S.deep ? { do:'today' } : { do:'press' }));
+// The speed pill: one tick of S.steps per tap (1 ... 100 years a minute, never to stop: Pause
+// does that). While running it changes the speed at once; while paused it only chooses,
+// and Run starts at it.
+const sysShown = () => S.running ? S.years_per_min : S.ypm_set || 1;
+function sysStep(n) {
+  if (!S || S.deep) return;
+  const ticks = S.steps.filter(v => v > 0), v = sysShown();
+  const i = n > 0 ? ticks.findIndex(t => t > v) : ticks.map(t => t < v).lastIndexOf(true);
+  if (i < 0) return;
+  act({ do:'speed', ypm:ticks[i], apply:S.running });
+}
+document.getElementById('sysslow').addEventListener('click', () => sysStep(-1));
+document.getElementById('sysfast').addEventListener('click', () => sysStep(1));
+PV.onPick = async n => { await act({ do:'tab', mode:'planets' }); await act({ do:'planet', n }); };
+// The date in fixed slots, so nothing shifts while it rolls: the
+// day right-aligned in a two-digit slot, the month in the widest month's width, the year
+// always starting at the same place. Slot widths in em, measured once in this font.
+let slotEm = null;
+function slottedDate(d, m, y) {
+  if (!slotEm) {
+    g.font = '700 100px system-ui, sans-serif';
+    const widest = list => Math.max(...list.map(t => g.measureText(t).width)) / 100;
+    slotEm = { d:widest(['10', '20', '28', '30', '31', '00']), m:widest(MONTHS), gap:g.measureText(' ').width / 100 };
+  }
+  const slot = (w, align, t) => `<span style="display:inline-block;width:${w.toFixed(3)}em;margin-right:${slotEm.gap.toFixed(3)}em;text-align:${align}">${t}</span>`;
+  return slot(slotEm.d, 'right', d) + slot(slotEm.m, 'left', MONTHS[m - 1]) + yearText(y);
+}
+function drawSystem() {
+  if (!PV.ok) { PV.hide(); centre('The 3D view needs WebGL'); return; }
+  PV.system(V);
+  const n = S.servos.length, on = S.servos.filter(Boolean).length;
+  const [y, m, d] = V.ymd, what = (S.running ? `Running: ${howMuch(S.years_per_min)} a minute` : S.moving ? 'Moving the planets…'
+             : S.deep ? 'Planets: a guess (too long ago to know)' : 'Paused')
+             + (S.sim ? '' : S.manual ? ' · Manual mode: motors off the date'
+                : n && on < n ? ` · ${on} of ${n} planets connected` : '');
+  const lamp = S.running ? '#5fd08a' : S.moving || S.manual ? '#ffb300' : '#7f8bb3';
+  const text = `${S.deep ? deepText() : slottedDate(d, m, y)}<small><i style="background:${lamp}"></i>${what}</small>`;
+  if (sysinfo.innerHTML !== text) sysinfo.innerHTML = text;
+  const pending = S.running && S.ypm_set !== S.years_per_min;
+  const label = S.deep ? '◀  Today' : !S.running ? '▶  Run' : pending && S.ypm_set ? `▶  Run at ${S.ypm_set.toLocaleString()}` : '❚❚  Pause';
+  if (sysrun.textContent !== label) sysrun.textContent = label;
+  sysrun.classList.toggle('go', label.startsWith('▶'));
+  const v = sysShown(), ticks = S.steps.filter(t => t > 0), sp = `${v.toLocaleString()}<small>YEARS / MIN</small>`;
+  const ypmEl = document.getElementById('sysypm');
+  if (ypmEl.dataset.v !== sp) { ypmEl.dataset.v = sp; ypmEl.innerHTML = sp; }
+  document.getElementById('sysslow').disabled = !!S.deep || v <= ticks[0];
+  document.getElementById('sysfast').disabled = !!S.deep || v >= ticks[ticks.length - 1];
+}
+// TIME TRAVEL tab (26 Sep, the user's list; Cambrian explosion, Dinosaur extinction and
+// All nine in a line removed 7 Nov 2026, Birth of Jesus swapped for the Miracle of the Sun, that for the
+// first airplane flight 14 Nov, dropped 16 Nov): four moments on the left, oldest first; tap
+// one and the arms go there (server.py EVENTS has the dates, in this order). On the
+// right just its name, its date and the planets, as big as they fit (the user: no story
+// text). While the arms move, a counter runs through the years in between.
+// Under the moments, "Pick a date" (7 Nov 2026, moved here from the old RUN screen): the
+// right side becomes the day, month and year in three boxes; tap one, set it with the
+// arrows (the year also by tens), then GO.
+const TRIPS = [
+  { name:'Mt. Vesuvius eruption', when:'24 August 79 AD', colour:'#d9534f' },
+  { name:'Declaration of Independence', when:'4 July 1776', colour:'#e05a4f' },
+  { name:'Moon landing', when:'20 July 1969', colour:'#cfd8dc' },
+  { name:'Today', when:'', colour:'#ffb300', now:true },                    // its date: today's, filled in when drawn
+];
+const FULL_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+function todayText() { const t = new Date(); return `${t.getDate()} ${FULL_MONTHS[t.getMonth()]} ${t.getFullYear()}`; }
+// The counter: years before today (below 0: years from now), from where the arms were to where they are going.
+let trip = { k:undefined, now:undefined, from:0, to:0, t0:0 };
+const yearsAgo = st => st.deep || (todayDay() - st.day) / 365.25;
+function todayDay() { const t = new Date(); return Math.round((Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()) - Date.UTC(2000, 0, 1)) / 86400000); }
+function agoText(n) {
+  return n >= 1e6 ? `${(n / 1e6).toLocaleString(undefined, { maximumFractionDigits:n < 1e7 ? 1 : 0 })} million years ago`
+       : Math.abs(n) < 0.05 ? 'today'
+       // Under 100 years: one decimal (15 Nov 2026, the user: kids put in their birthday, and
+       // 3 Jan 2016 read "11 years ago" when it was 10.9).
+       : `${Math.abs(n) < 100 ? Math.abs(n).toFixed(1) : Math.round(Math.abs(n)).toLocaleString()} years ${n > 0 ? 'ago' : 'from now'}`;
+}
+const PICK = { name:'Pick a date', when:'Any day, 1 AD to 3000', colour:'#8fa3d8' };   // server.py PICK_YEARS (1800-2200 until 14 Nov 2026)
+// After Pick a date's GO, S.trip is the Pick a date row itself (server.py PICKED): its
+// date is shown like a moment's, and opening Pick a date again starts from it (13 Nov 2026).
+const longDate = ([y, m, d]) => `${d} ${FULL_MONTHS[m - 1]} ${yearText(y)}`;
+const PART = ['day', 'month', 'year'];
+function drawPicker(X, W) {
+  const f = S.editing, [y, m, d] = S.entry;
+  g.textAlign = 'left'; g.fillStyle = '#fff'; g.font = '700 26px system-ui, sans-serif'; g.fillText('Pick a date', X + 10, 104);
+  g.fillStyle = '#ffd36b'; g.font = '600 16px system-ui, sans-serif';
+  g.fillText('Starts where the planets are now. Change it, then GO', X + 10, 130);
+  const boxes = [[String(d), 0.23], [FULL_MONTHS[m - 1], 0.43], [yearText(y), 0.34]].map(([t, k]) => [t, Math.floor((W - 40) * k)]);
+  let x = X + 10;
+  boxes.forEach(([t, w], i) => {
+    const on = i === f;
+    g.fillStyle = on ? '#1b2c66' : '#10173a'; g.beginPath(); g.roundRect(x, 150, w, 84, 12); g.fill();
+    g.strokeStyle = on ? '#ffb300' : '#2a3566'; g.lineWidth = on ? 4 : 2; g.stroke();
+    g.fillStyle = '#fff'; g.font = fit(t, w - 16, 40, 700); g.textAlign = 'center'; g.fillText(t, x + w / 2, 206);
+    g.fillStyle = on ? '#ffd36b' : '#7f8bb3'; g.font = '500 13px system-ui, sans-serif'; g.fillText(PART[i], x + w / 2, 250);
+    hits.push({ x, y:150, w, h:104, a:{ do:'edit', field:i } });
+    x += w + 10;
+  });
+  // The year also by hundreds (14 Nov 2026: years now go back to 1 AD).
+  const b = f === 2 ? [['−100', -100], ['−10', -10], ['−1', -1], ['+1', 1], ['+10', 10], ['+100', 100]] : [['▼', -1], ['▲', 1]];
+  const bw = (W - 20 - 10 * (b.length - 1)) / b.length;
+  b.forEach(([label, n], i) => button(X + 10 + i * (bw + 10), 272, bw, 80, label, '#1e2a55', { do:'nudge', field:f, n }, 34));
+  button(X + 10, 388, (W - 30) / 2, 70, 'Cancel', '#1e2a55', { do:'cancel' });
+  button(X + 20 + (W - 30) / 2, 388, (W - 30) / 2, 70, 'GO ▶', '#2f9e5b', { do:'go' });
+}
+// The list (16 Nov 2026, the user: lighter, smaller text, so the picture gets the room):
+// 200 px wide on the dark of the 3D view, no boxes; the chosen row has a soft tint and a
+// bar in its colour; long names wrap onto two lines.
+const LW = 200;
+function drawTravel() {
+  const k = S.trip, picking = S.editing !== null;
+  if (k !== trip.k) {                                   // just sent somewhere: count from where the arms were
+    const to = yearsAgo(S), animate = trip.k !== undefined && k !== null && trip.now !== undefined;
+    trip = { k, from:trip.now ?? to, to, now:trip.now ?? to, t0:animate ? performance.now() : 0 };
+  }
+  g.fillStyle = '#02030a'; g.fillRect(0, 64, 800, 416);  // the 3D view's own black, so the list sits on it
+  const edge = g.createLinearGradient(LW - 24, 0, LW, 0); edge.addColorStop(0, 'rgba(20,27,56,0)'); edge.addColorStop(1, 'rgba(20,27,56,.55)');
+  g.fillStyle = edge; g.fillRect(LW - 24, 64, 24, 416);
+  // The list, oldest at the top, on a time line; Pick a date last.
+  const rows = [...TRIPS, PICK], top = 70, rowH = 404 / rows.length;
+  g.fillStyle = 'rgba(143,163,216,.25)'; g.fillRect(19, top + rowH / 2, 2, 404 - rowH);
+  rows.forEach((t, i) => {
+    const pick = t === PICK, y = top + i * rowH, on = pick ? picking || i === k : i === k, mid = y + rowH / 2;
+    if (on) {
+      g.fillStyle = 'rgba(90,130,240,.16)'; g.beginPath(); g.roundRect(4, y + 3, LW - 10, rowH - 6, 8); g.fill();
+      g.fillStyle = t.colour; g.beginPath(); g.roundRect(4, y + 8, 3, rowH - 16, 2); g.fill();
+    }
+    g.fillStyle = t.colour; g.beginPath(); g.arc(20, mid, on ? 6.5 : 5, 0, 7); g.fill();
+    g.font = `${on ? 700 : 600} 15px system-ui, sans-serif`;
+    const lines = wrap(t.name, LW - 46).slice(0, 2), date = t.now ? todayText() : pick && on && !picking ? longDate(S.ymd) : t.when;
+    const y0 = mid - (lines.length - 1) * 9 - 6;
+    g.textAlign = 'left'; g.fillStyle = on ? '#fff' : 'rgba(223,230,255,.82)';
+    lines.forEach((line, j) => g.fillText(line, 34, y0 + j * 18));
+    g.fillStyle = on ? '#ffd36b' : 'rgba(150,162,200,.8)'; g.font = fit(date, LW - 46, 12, 500);
+    g.fillText(date, 34, y0 + lines.length * 18 + 1);
+    hits.push({ x:0, y, w:LW, h:rowH, a:pick ? { do:'edit', field:picking ? S.editing : 2 } : { do:'travel', n:i } });
+  });
+  // The rest: the picker, or the planets with the name and date bottom right.
+  const X = LW + 12, W = 800 - LW - 20, t = k === null ? null : TRIPS[k] || { name:'Your date', when:longDate(S.ymd), colour:PICK.colour };
+  if (picking) {
+    PV.hide();
+    g.fillStyle = '#10173a'; g.beginPath(); g.roundRect(X - 6, 72, W + 8, 400, 12); g.fill();
+    drawPicker(X, W); return;
+  }
+  let html;
+  if (!t) {                                             // no moment chosen: just the date
+    trip.now = yearsAgo(S);
+    const [y, m, d] = V.ymd;
+    html = S.deep ? deepText() : `${d} ${MONTHS[m - 1]} ${yearText(y)}`;
+  } else {
+    const kk = Math.min((performance.now() - trip.t0) / 2600, 1), e = 1 - (1 - kk) ** 3;
+    const log = v => Math.sign(v) * Math.log10(Math.abs(v) + 1), unlog = s => Math.sign(s) * (10 ** Math.abs(s) - 1);   // either side of today
+    const now = trip.t0 && kk < 1 ? unlog(log(trip.from) + (log(trip.to) - log(trip.from)) * e) : trip.to;
+    trip.now = now;
+    if (kk >= 1) trip.t0 = 0;                           // counter done: stop redrawing every frame
+    const when = t.now ? todayText() : t.when;
+    const sub = trip.t0 ? `${trip.to > trip.from ? '◀◀ Back' : 'Forward ▶▶'} in time… ${agoText(now)}` : t.now ? '' : agoText(trip.to);
+    html = `<b style="color:${t.colour}">${t.name}</b>${when}${sub ? `<small>${sub}</small>` : ''}`;
+  }
+  const el = document.getElementById('travdate');
+  if (el.dataset.v !== html) { el.dataset.v = html; el.innerHTML = html; }
+  if (PV.ok) PV.system(V, { ctx:'travel', pick:false });                       // the 3D solar system (planets.js), drawn over the right side
+  else {
+    g.textAlign = 'right'; g.fillStyle = '#fff'; g.font = '700 22px system-ui, sans-serif'; g.fillText(t ? t.name : html, 790, 100); g.textAlign = 'left';
+    drawMap(X + W / 2, 290, 170, false, true);
+  }
+}
+// SCALE tab (26 Sep, the user's idea): the Sun and the planets side by side at their
+// true sizes, all to one scale (planets.js, 3D); pinch or drag to look closer at the small
+// ones. (A "Distances" view, planets on a line at true distances, was tried the same day
+// and dropped: the user found it confusing.)
+let wasScale = false;
+function drawScale() {                                  // no words: the picture says it (the user)
+  if (!PV.ok) { PV.hide(); centre('The 3D view needs WebGL'); return; }
+  PV.scale();
+}
+// GALAXY tab (14 Nov 2026, the user's idea): where the solar system is in the Milky Way.
+// On the left, in words: what the galaxy is and where we are in it; on the right the galaxy
+// in 3D (planets.js) with "You are here" at the Sun. Figures: NASA (rounded; US units).
+// The words are hidden to start with, so the galaxy has the whole screen (14 Nov 2026, the
+// user); the Facts button, top right of the picture, shows and hides them. This screen only.
+let wasGalaxy = false, galFacts = false;
+const galBtn = document.getElementById('galbtn');
+galBtn.addEventListener('click', () => { galFacts = !galFacts; draw(); });
+const GALAXY = [
+  ['HOW BIG', '100,000 light-years', 'across. Light needs 100,000 years to cross it.'],
+  ['WHERE WE ARE', '26,000 light-years', 'from the centre: about halfway out, in the Orion Arm.'],
+  ['ONE LAP', '230 million years', 'at 500,000 mph. Last time round, the first dinosaurs.'],
+];
+function drawGalaxy() {
+  if (PV.ok && !galFacts) { PV.galaxy(); return; }        // the picture covers everything
+  const X = 14, W = 210;
+  g.textAlign = 'left';
+  g.fillStyle = '#ffd36b'; g.font = fit('The Milky Way', W, 30, 700); g.fillText('The Milky Way', X, 104);
+  g.fillStyle = '#c9d3f2'; g.font = '500 15px system-ui, sans-serif';
+  wrap('Our galaxy: the Sun and more than 100 billion other stars.', W).forEach((line, k) => g.fillText(line, X, 127 + k * 19));
+  GALAXY.forEach(([label, value, note], n) => {
+    const y = 180 + n * 84;
+    g.fillStyle = '#7f8bb3'; g.font = '600 12px system-ui, sans-serif'; g.fillText(label, X, y);
+    g.fillStyle = '#fff'; g.font = fit(value, W, 21, 700); g.fillText(value, X, y + 24);
+    g.fillStyle = '#9aa6c9'; g.font = '500 14px system-ui, sans-serif';
+    wrap(note, W).slice(0, 2).forEach((line, k) => g.fillText(line, X, y + 43 + k * 17));
+  });
+  g.fillStyle = '#141b38'; g.beginPath(); g.roundRect(8, 424, 220, 48, 10); g.fill();
+  g.fillStyle = '#ffd400'; g.fillRect(8, 424, 5, 48);
+  g.fillStyle = '#e6ebff'; g.font = '500 13px system-ui, sans-serif';
+  wrap('A drawing: no camera has ever left the galaxy to look back.', 200).slice(0, 2).forEach((line, k) => g.fillText(line, 22, 444 + k * 17));
+  if (!PV.ok) { PV.hide(); g.textAlign = 'center'; g.fillStyle = '#8fa3d8'; g.font = '600 24px system-ui, sans-serif'; g.fillText('The 3D view needs WebGL', 518, 270); return; }
+  PV.galaxy();
+}
+// SETTINGS (gear icon; the tab started 26 Sep as HEALTH, the code still calls it 'health').
+// Redone 8 Nov 2026 (the user, for testing each motor once the gears were glued): a
+// small Pi line (temperature, CPU, motion loop), the MANUAL / AUTO switch, the servo
+// list (tap a planet to pick it in manual) and the manual controls: direction, an rpm
+// slider that applies as it moves, STOP. The Pi starts in AUTO (server.py, since 7 Nov 2026).
+// Servo readings come from /api/health every 0.5 s while this tab is shown.
+function healthTab(x, on) {
+  if (on) tabPill(x, 64);
+  const cx = x + 32, cy = 32;
+  g.fillStyle = on ? '#fff' : '#93a0c8'; g.beginPath();
+  for (let k = 0; k <= 32; k++) {                          // 8 teeth: two points out, two in
+    const a = (k - 0.5) * Math.PI / 16, r = Math.floor(k / 2) % 2 ? 11.5 : 16;
+    k ? g.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a)) : g.moveTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+  }
+  g.moveTo(cx + 5, cy); g.arc(cx, cy, 5, 0, 7, true); g.fill('evenodd');
+  if (S.manual || S.lined_up) { g.fillStyle = '#ffb300'; g.beginPath(); g.arc(x + 51, 14, 6, 0, 7); g.fill(); }   // manual or travel mode: an amber dot
+  hits.push({ x, y:0, w:64, h:64, a:{ do:'tab', mode:'health' } });
+}
+let homeAsk = false, homeAskTimer = 0;      // SAVE HOME asks for a second tap (a stray one must not move the line)
+function localTap(what) {
+  if (what === 'askHome' || what === 'askUnhome') {
+    homeAsk = what === 'askHome' ? 'home' : 'unhome'; clearTimeout(homeAskTimer);
+    homeAskTimer = setTimeout(() => { homeAsk = false; draw(); }, 5000);
+    draw();
+  }
+}
+// The "poweroff" action (27 Sep 2026, battery build) is still in server.py, with no button
+// on the screen since 13 Nov 2026; if something sends it, the screen says what to do.
+function powerIcon(cx, cy, r, colour, width) {
+  g.strokeStyle = colour; g.lineWidth = width; g.lineCap = 'round';
+  g.beginPath(); g.arc(cx, cy, r, -Math.PI / 2 + 0.75, -Math.PI / 2 - 0.75 + 2 * Math.PI); g.stroke();
+  g.beginPath(); g.moveTo(cx, cy - r - width * 0.4); g.lineTo(cx, cy - r * 0.15); g.stroke();
+}
+function drawOff() {
+  powerIcon(400, 150, 44, '#7f8bb3', 7);
+  g.textAlign = 'center'; g.fillStyle = '#fff'; g.font = '700 42px system-ui, sans-serif'; g.fillText('Turning off…', 400, 270);
+  g.fillStyle = '#c9d3f2'; g.font = '500 24px system-ui, sans-serif';
+  g.fillText('Wait until this screen goes dark,', 400, 320);
+  g.fillText('then flip the red switch.', 400, 354);
+}
+let health = null, healthBusy = false, healthAt = 0;
+async function pollHealth() {
+  if (healthBusy || performance.now() - healthAt < 500) return;
+  healthBusy = true; healthAt = performance.now();
+  try { health = SIM ? { sim:true } : await (await fetch('/api/health', { cache:'no-store' })).json(); } catch (e) { health = null; }
+  healthBusy = false; draw();
+}
+setInterval(() => { if (S && S.mode === 'health') pollHealth(); }, 250);
+const GOOD = '#5fd08a', WARN = '#ffc857', BAD = '#ff6b6b', DIM = '#7f8bb3';
+const degF = c => `${Math.round(c * 9 / 5 + 32)} °F`;   // temperatures read in °C, shown in °F (the user, 26 Sep)
+const AMBER = '#ffb300';
+let mgauge = null, mdrag = null;           // manual rpm slider (where it is drawn; a drag in progress)
+function drawHealth() {
+  if (!health) pollHealth();
+  const H = health && !health.sim ? health : null, P = H ? H.pi : {}, M = S.manual, man = S.man;
+  // Top left: the Pi, one small line (the user: "we really don't need much of the left side status").
+  g.fillStyle = '#141b38'; g.beginPath(); g.roundRect(10, 72, 520, 48, 10); g.fill();
+  g.textAlign = 'left'; g.fillStyle = DIM; g.font = '700 13px system-ui, sans-serif'; g.fillText('PI', 24, 101);
+  let px = 52;
+  const piece = (text, colour) => { g.fillStyle = colour; g.font = '600 18px system-ui, sans-serif'; g.fillText(text, px, 103); px += g.measureText(text).width + 22; };
+  if (!H) piece(health && health.sim ? 'simulation: no Pi here' : 'checking…', DIM);
+  else {
+    const c = P.cpu_c, now = P.throttled_now || [];
+    piece(c == null ? '— °F' : degF(c), c == null ? DIM : c >= 80 ? BAD : c >= 70 ? WARN : GOOD);
+    piece(P.cpu_pct == null ? 'CPU —' : `CPU ${P.cpu_pct}%`, P.cpu_pct >= 90 ? WARN : '#fff');
+    // Normal ~100 ms; starting or stopping a run takes one pass of ~250 ms.
+    piece(H.loop_ms ? `loop ${H.loop_ms.avg} ms` : 'loop —', H.loop_ms && H.loop_ms.max > 300 ? WARN : '#fff');
+    if (now.length) piece(now.join(', '), BAD);
+  }
+  // Top right: MANUAL / AUTO.
+  [['MANUAL', true, '#b7791f'], ['AUTO', false, '#2f9e5b']].forEach(([label, on, colour], k) => {
+    const bx = 540 + k * 126, sel = M === on;
+    g.fillStyle = sel ? colour : '#1e2a55'; g.beginPath(); g.roundRect(bx, 72, 124, 48, 10); g.fill();
+    g.fillStyle = sel ? '#fff' : DIM; g.font = '700 20px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText(label, bx + 62, 103);
+    hits.push({ x:bx, y:72, w:124, h:48, a:{ do:'manual', on } });
+  });
+
+  // Left: the servos, one row each; in manual a tap picks or unpicks that planet.
+  const servos = H ? H.servos : S.servo_names.map((name, i) => ({ name, id:i + 1, connected:false }));
+  g.fillStyle = '#141b38'; g.beginPath(); g.roundRect(10, 128, 460, 344, 12); g.fill();
+  const on = servos.filter(v => v.connected).length;
+  const volts = servos.filter(v => v.connected && v.volts != null).map(v => v.volts), vMin = volts.length ? Math.min(...volts) : null;
+  g.textAlign = 'left'; g.fillStyle = '#c9d3f2'; g.font = '700 18px system-ui, sans-serif'; g.fillText('Servos', 24, 154);
+  const head = !H ? '' : H.dry_run ? 'test mode: none' : `${on} of ${servos.length} connected` + (vMin == null ? '' : ` · ${vMin.toFixed(1)} V`);
+  g.fillStyle = on === servos.length && !(vMin != null && vMin < 6.5) ? GOOD : WARN; g.font = '600 15px system-ui, sans-serif'; g.textAlign = 'right';
+  g.fillText(head, 456, 154);
+  const fourth = M ? 'LOAD' : 'OFF BY', LINE = M || S.lined_up;   // calibrating: how far each arm is from the travel-mode line
+  g.fillStyle = DIM; g.font = '600 11px system-ui, sans-serif';
+  g.textAlign = 'left'; g.fillText(M ? 'TAP TO PICK' : 'PLANET', 24, 178);
+  [[250, LINE ? 'FROM ROW' : 'TEMP'], [318, fourth], [386, 'AMPS'], [452, 'RPM']].forEach(([x, t]) => { g.textAlign = 'right'; g.fillText(t, x, 178); });
+  servos.forEach((v, i) => {
+    const top = 186 + i * 35, y = top + 22, picked = M && man.sel[i];
+    const trip = v.connected && v.tripped && v.tripped.length;
+    if (picked) { g.fillStyle = '#1b2c66'; g.beginPath(); g.roundRect(16, top, 448, 32, 8); g.fill(); g.strokeStyle = AMBER; g.lineWidth = 2; g.stroke(); }
+    if (M) {                                               // a tick box
+      g.strokeStyle = picked ? AMBER : '#46558f'; g.lineWidth = 2; g.beginPath(); g.roundRect(24, top + 7, 18, 18, 4); g.stroke();
+      if (picked) { g.fillStyle = AMBER; g.fill(); g.strokeStyle = '#0b1024'; g.lineWidth = 3; g.beginPath(); g.moveTo(28, top + 16); g.lineTo(32, top + 20); g.lineTo(38, top + 11); g.stroke(); }
+      hits.push({ x:16, y:top, w:448, h:33, a:{ do:'mpick', p:i } });
+    } else { g.fillStyle = trip ? BAD : v.connected ? GOOD : '#46558f'; g.beginPath(); g.arc(33, top + 16, 5, 0, 7); g.fill(); }
+    g.textAlign = 'left'; g.fillStyle = trip ? BAD : v.connected ? '#fff' : DIM; g.font = '600 16px system-ui, sans-serif';
+    g.fillText(`${v.id} ${v.name}${v.spinning ? ' ↻' : ''}`, 52, y);
+    const cell = (x, text, colour) => { g.textAlign = 'right'; g.fillStyle = colour || '#dfe6ff'; g.font = '500 14px system-ui, sans-serif'; g.fillText(text, x, y); };
+    if (!v.connected) { cell(452, H && !H.dry_run ? 'not connected' : '—', DIM); return; }
+    if (LINE) cell(250, v.line_deg == null ? '—' : `${v.line_deg > 0 ? '+' : ''}${v.line_deg.toFixed(1)}°`, v.line_deg == null ? DIM : Math.abs(v.line_deg) > 2 ? WARN : GOOD);
+    else cell(250, v.temp_c == null ? '—' : degF(v.temp_c), v.temp_c >= 70 ? BAD : v.temp_c >= 55 ? WARN : null);
+    if (M) cell(318, v.load_pct == null ? '—' : `${Math.round(v.load_pct)}%`, Math.abs(v.load_pct) >= 80 ? WARN : null);
+    else cell(318, v.off_deg == null ? '—' : `${Math.abs(v.off_deg).toFixed(1)}°`, Math.abs(v.off_deg) > 10 ? WARN : null);
+    // Free-running arms draw 0.01-0.12 A (30 Sep); a held or jammed one far more.
+    cell(386, v.current_ma == null ? '—' : `${(Math.abs(v.current_ma) / 1000).toFixed(2)} A`, Math.abs(v.current_ma) >= 500 ? WARN : null);
+    cell(452, v.rpm == null ? '—' : Math.abs(v.rpm).toFixed(1));
+  });
+
+  // Right: manual control, or what AUTO means.
+  g.fillStyle = '#141b38'; g.beginPath(); g.roundRect(480, 128, 310, 344, 12); g.fill();
+  mgauge = null;
+  g.textAlign = 'left';
+  if (!M) {
+    // TRAVEL MODE (8 Nov 2026 as LINE UP, the user's design; renamed and turned round
+    // 13 Nov 2026): every arm points away from the screen, the planets in one row. For
+    // carrying the model, for clamping the arms on (the home position), and to check the
+    // calibration. A planet off the row is fixed in MANUAL: step it on, SAVE HOME.
+    const L = S.lined_up;
+    // In travel mode the panel says so in big letters, with the same amber dot as on the gear
+    // (14 Nov 2026, the user: "I see a yellow dot but I don't know what it is for").
+    if (L) {
+      g.fillStyle = AMBER; g.beginPath(); g.arc(504, 149, 7, 0, 7); g.fill();
+      g.font = '700 21px system-ui, sans-serif'; g.fillText('TRAVEL MODE IS ON', 520, 157);
+      g.font = '600 13px system-ui, sans-serif'; g.fillText('That is the yellow dot on the gear.', 496, 178);
+    } else { g.fillStyle = '#5fd08a'; g.font = '700 18px system-ui, sans-serif'; g.fillText('Auto', 496, 154); }
+    g.fillStyle = '#dfe6ff'; g.font = '500 17px system-ui, sans-serif';
+    wrap(L ? 'The planets are in one row, away from the screen, to carry or clamp.'
+           : 'The planets follow the date: Run, Today and TIME MACHINE move them.', 278).forEach((line, k) => g.fillText(line, 496, (L ? 203 : 184) + k * 22));
+    travelIcon(620, 282, L);
+    g.fillStyle = DIM; g.font = '500 14px system-ui, sans-serif';
+    wrap(L ? 'One out of the row? MANUAL, pick it, step it into the row, SAVE HOME.'
+           : 'TRAVEL MODE is the home position: every planet in a row, away from the screen.', 278)
+      .forEach((line, k) => g.fillText(line, 496, 344 + k * 19));
+    button(496, 384, 278, 78, L ? 'Back to the date' : 'TRAVEL MODE', L ? '#2f9e5b' : '#2f6fde', { do:'lineup', on:!L }, L ? 26 : 28);
+    return;
+  }
+  const picked = S.servo_names.filter((n, i) => man.sel[i]), rpm = mdrag && mdrag.rpm !== null ? mdrag.rpm : man.rpm;
+  g.fillStyle = AMBER; g.font = '700 18px system-ui, sans-serif'; g.fillText('Manual', 496, 154);
+  const who = S.note || (picked.length ? picked.join(', ') : 'Tap planets on the left to pick');
+  g.fillStyle = S.note ? GOOD : picked.length ? '#fff' : DIM; g.font = fit(who, 278, 16, 600); g.fillText(who, 496, 180);
+  [['↺  Forward', 1], ['↻  Reverse', -1]].forEach(([label, dir], k) =>
+    button(496 + k * 142, 194, 138, 44, label, man.dir === dir ? '#2f6fde' : '#1e2a55', { do:'mdir', dir }, 18));
+  g.textAlign = 'left'; g.fillStyle = rpm && picked.length ? AMBER : '#fff'; g.font = '700 34px system-ui, sans-serif';
+  g.fillText(rpm ? `${rpm} rpm` : 'Stopped', 496, 276);
+  g.textAlign = 'right'; g.fillStyle = DIM; g.font = '500 14px system-ui, sans-serif';
+  g.fillText(rpm ? `1 turn every ${+(60 / rpm).toFixed(1)} s` : 'slide to spin', 774, 274);
+  const st = man.steps, x0 = 508, x1 = 762, gy = 300, xOf = k => x0 + (x1 - x0) * k / (st.length - 1);
+  mgauge = { x0, x1, y:gy, xOf };
+  g.fillStyle = '#26315c'; g.fillRect(x0, gy - 4, x1 - x0, 8);
+  g.textAlign = 'center'; g.font = '500 13px system-ui, sans-serif';
+  st.forEach((v, k) => { g.fillStyle = '#46558f'; g.fillRect(xOf(k) - 1.5, gy - 9, 3, 18); g.fillStyle = DIM; g.fillText(v, xOf(k), gy + 28); });
+  const kx = xOf(Math.max(st.indexOf(rpm), 0));
+  g.fillStyle = AMBER; g.beginPath(); g.arc(kx, gy, mdrag ? 18 : 14, 0, 7); g.fill();
+  // Calibration: step the picked arms 1 or 10 degrees (the way the arrows above say),
+  // then SAVE HOME = "these arms are on the line now" (two taps). Not while spinning.
+  const still = !rpm && picked.length, arrow = man.dir > 0 ? '↺' : '↻';
+  [1, 10].forEach((deg, k) => button(496 + k * 70, 338, 66, 40, `${arrow} ${deg}°`, still ? '#2f6fde' : '#1e2a55', { do:'mnudge', deg }, 17));
+  button(636, 338, 138, 40, homeAsk === 'home' ? 'Tap to save' : 'SAVE HOME', homeAsk === 'home' ? '#b7791f' : still ? '#2f9e5b' : '#1e2a55',
+         homeAsk === 'home' ? { do:'home' } : { local:'askHome' }, 17);
+  // RESET HOME (16 Nov 2026, the user): forget the picked planets' saved homes (two taps), for
+  // an arm put right by hand on its tube. Lit when a picked planet has a saved home.
+  const saved = S.home_set.some((h, p) => h && man.sel[p]);
+  button(496, 384, 278, 36, homeAsk === 'unhome' ? 'Tap again to reset' : 'RESET HOME', homeAsk === 'unhome' ? '#b7791f' : saved ? '#3b4a85' : '#1e2a55',
+         homeAsk === 'unhome' ? { do:'unhome' } : { local:'askUnhome' }, 15);
+  button(496, 426, 278, 38, '■  STOP', '#c0392b', { do:'mstop' }, 22);
+}
+// The travel-mode picture, seen from above: the box with the screen at the front, the Sun,
+// and the planets in a row to the back (lit when in travel mode).
+function travelIcon(cx, cy, on) {
+  g.fillStyle = '#10173a'; g.strokeStyle = '#2a3566'; g.lineWidth = 1.5; g.beginPath(); g.roundRect(cx - 44, cy - 34, 88, 68, 8); g.fill(); g.stroke();
+  g.fillStyle = '#3b4a85'; g.beginPath(); g.roundRect(cx - 22, cy + 25, 44, 6, 3); g.fill();          // the screen
+  g.fillStyle = '#7f8bb3'; g.font = '600 10px system-ui, sans-serif'; g.textAlign = 'left'; g.fillText('screen', cx + 50, cy + 32); g.fillText('back', cx + 50, cy - 26);
+  g.fillStyle = '#ffb300'; g.beginPath(); g.arc(cx, cy + 12, 5, 0, 7); g.fill();
+  COLORS.slice(0, 8).forEach((c, p) => {
+    g.globalAlpha = on ? 1 : 0.35; g.fillStyle = c; g.beginPath(); g.arc(cx, cy + 4 - p * 4.6, p === 4 || p === 5 ? 2.6 : 2, 0, 7); g.fill();
+  });
+  g.globalAlpha = 1; g.textAlign = 'left';
+}
+// Manual rpm slider: press anywhere on it and drag; the dot snaps to the ticks and the
+// speed goes to the Pi as it moves (at most every 120 ms), and once more on release.
+function mgaugeTo(x) {
+  const st = S.man.steps, k = Math.round(Math.min(Math.max((x - mgauge.x0) / (mgauge.x1 - mgauge.x0), 0), 1) * (st.length - 1));
+  if (st[k] === mdrag.rpm) return;
+  mdrag.rpm = st[k]; draw();
+  const now = performance.now();
+  if (now - mdrag.sent >= 120) { mdrag.sent = now; act({ do:'mspeed', rpm:st[k] }); }
+}
+// PLANETS tab: a row of buttons (the Sun, then the planets); on the left a 3D globe
+// (planets.js draws it on #p3, over this canvas), on the right its facts. With the facts
+// hidden the globe covers everything below the buttons.
+function drawPlanets() {
+  const P = PV.INFO, i = S.planet, info = P[i].dwarfs && dwarf ? PV.DWARFS[dwarf - 1] : P[i], col = info.color;
+  if (P[i].dwarfs) [...dwarfRow.children].forEach((b, k) => b.classList.toggle('on', k === dwarf));
+  P.forEach((p, k) => {
+    const bw = (800 - 8 - 4 * (P.length - 1)) / P.length, x = 4 + k * (bw + 4), on = k === i, name = p.short || p.name, mx = x + bw / 2;
+    g.fillStyle = on ? '#1b2c66' : '#141b38'; g.beginPath(); g.roundRect(x, 72, bw, 48, 10); g.fill();
+    if (on) { g.strokeStyle = p.color; g.lineWidth = 3; g.stroke(); }
+    g.fillStyle = p.color;
+    if (p.belt) [[-9, 1, 2.2], [-4, -2, 3], [1, 2, 2], [5, -1, 3.2], [10, 1, 2]].forEach(([dx, dy, r]) => { g.beginPath(); g.arc(mx + dx, 86 + dy, r, 0, 7); g.fill(); });   // a few rocks
+    else { g.beginPath(); g.arc(mx, 86, k ? 6 : 8, 0, 7); g.fill(); }
+    g.fillStyle = on ? '#fff' : '#9aa6c9'; g.font = fit(name, bw - 6, 15, on ? 700 : 600); g.textAlign = 'center';
+    g.fillText(name, mx, 112);
+    hits.push({ x, y:72, w:bw, h:48, a:{ do:'planet', n:k } });
+  });
+  PV.show(i, dwarf);
+  if (!PV.ok) {                                        // no WebGL: a plain shaded disc
+    const grad = g.createRadialGradient(140, 240, 10, 178, 281, 120);
+    grad.addColorStop(0, '#fff'); grad.addColorStop(0.25, col); grad.addColorStop(1, '#05070f');
+    g.fillStyle = '#02030a'; g.fillRect(8, 128, 340, 306); g.fillStyle = grad; g.beginPath(); g.arc(178, 281, 110, 0, 7); g.fill();
+  }
+  document.getElementById('p3credit').textContent = info.credit;
+  if (full) return;                                    // the globe covers the rest
+  g.textAlign = 'left'; g.fillStyle = '#7f8bb3';
+  const tilt = Math.round(info.tilt), caption = info.belt ? 'Rocks drawn far bigger and closer than in real life' : info.note ? info.note : `Tilted ${tilt}°${tilt > 90 ? ': spins backwards' : ''} · drag, pinch to zoom${info.moons ? ' · moons not to scale' : ''}`;
+  g.font = fit(caption, 338, 15, 500); g.fillText(caption, 10, 454);
+  g.fillStyle = '#4b5680'; g.font = '500 11px system-ui, sans-serif'; g.fillText(info.credit, 10, 472);
+
+  const X = 368;
+  g.fillStyle = col; g.font = '700 42px system-ui, sans-serif'; g.fillText(info.name, X, 170);
+  g.fillStyle = '#c9d3f2'; g.font = fit(info.tag, 422, 18, 500); g.fillText(info.tag, X, 198);
+  info.facts.forEach(([label, value, note], k) => {
+    const x = X + (k % 2) * 216, y = 214 + Math.floor(k / 2) * 56;
+    g.fillStyle = '#7f8bb3'; g.font = '600 13px system-ui, sans-serif'; g.fillText(label.toUpperCase(), x, y + 14);
+    g.fillStyle = '#fff'; g.font = fit(value, 206, 21, 700); g.fillText(value, x, y + 39);
+    if (note) {
+      const w = g.measureText(value).width + 7;
+      g.fillStyle = '#9aa6c9'; g.font = '500 13px system-ui, sans-serif';
+      if (w + g.measureText(note).width <= 206) g.fillText(note, x + w, y + 39);
+      else { g.font = fit(note, 206, 12, 500); g.fillText(note, x, y + 53); }
+    }
+  });
+  g.fillStyle = '#141b38'; g.beginPath(); g.roundRect(X, 384, 422, 90, 10); g.fill();
+  g.fillStyle = col; g.fillRect(X, 384, 5, 90);
+  g.fillStyle = '#ffd36b'; g.font = '700 13px system-ui, sans-serif'; g.fillText('DID YOU KNOW?', X + 16, 404);
+  g.fillStyle = '#e6ebff'; g.font = '500 17px system-ui, sans-serif';
+  wrap(info.fun, 396).slice(0, 3).forEach((line, k) => g.fillText(line, X + 16, 427 + k * 21));
+}
+// The biggest font (down to 12px) that fits text in width w.
+function fit(text, w, size, weight) {
+  for (; size > 12; size--) { g.font = `${weight} ${size}px system-ui, sans-serif`; if (g.measureText(text).width <= w) break; }
+  return `${weight} ${size}px system-ui, sans-serif`;
+}
+function wrap(text, w) {
+  const lines = [''];
+  text.split(' ').forEach(word => {
+    const next = lines[lines.length - 1] ? lines[lines.length - 1] + ' ' + word : word;
+    if (g.measureText(next).width <= w || !lines[lines.length - 1]) lines[lines.length - 1] = next; else lines.push(word);
+  });
+  return lines;
+}
+poll();
+</script>
+</body>
+</html>

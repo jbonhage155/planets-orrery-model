@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<openbox_config xmlns="http://openbox.org/3.4/rc">
+	<!-- mouseEmulation="no": the screen sends real multi-touch to Chromium, so pinch-to-zoom
+	     works on the PLANETS tab (26 Sep 2026). With "yes" every touch was one mouse pointer.
+	     The panel shows up as "(79)" on this Pi; "(00)" is what the Screen Configuration tool wrote. -->
+	<touch deviceName="10-0038 generic ft5x06 (79)" mapToOutput="DSI-1" mouseEmulation="no"/>
+	<touch deviceName="10-0038 generic ft5x06 (00)" mapToOutput="DSI-1" mouseEmulation="no"/>
+</openbox_config>

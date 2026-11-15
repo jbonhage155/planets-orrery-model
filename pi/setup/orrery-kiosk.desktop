@@ -1,0 +1,6 @@
+# Opens the orrery screen full screen on the touchscreen after the desktop starts.
+# Installed to ~/.config/autostart by install-kiosk.sh. Remove that file to get the desktop back.
+[Desktop Entry]
+Type=Application
+Name=Orrery screen
+Exec=sh -c 'until curl -sf -o /dev/null http://localhost:8080/api/state; do sleep 1; done; exec chromium --kiosk --noerrdialogs --disable-infobars --disable-session-crashed-bubble --no-first-run --password-store=basic --ozone-platform=wayland --app=http://localhost:8080/?kiosk'

@@ -1,0 +1,11 @@
+#!/bin/sh
+# Installed as /usr/lib/systemd/system-shutdown/orrery-blank-screen by install-kiosk.sh.
+# systemd runs this at the very end of a shutdown, just before the Pi stops: it turns the
+# touchscreen's backlight off, so "the screen went dark" means it is safe to flip the
+# model's power switch (the screen's Turn off button, 27 Sep 2026). Not on a reboot.
+[ "$1" = reboot ] && exit 0
+for b in /sys/class/backlight/*; do
+  echo 0 > "$b/brightness" 2>/dev/null
+  echo 4 > "$b/bl_power" 2>/dev/null
+done
+exit 0

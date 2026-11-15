@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planet rings</title>
+<!-- Rings page (14 Nov 2026): a full-size printable template for the 2 mm EVA foam rings
+     (parts-list.md P4) - Saturn 3 in, Uranus and Neptune 2 in, each hole 1/16 in under its
+     ball so the foam grips - plus tilt gauges (Saturn 25°, Neptune 28°) and a 2 in check bar.
+     Orientation rules as on arms.html section 5. -->
+<style>
+  :root { --bg:#0b1026; --card:#151c3b; --ink:#f3f5ff; --muted:#aab3d6; --line:#2a335c; --accent:#ffd34d; --warn:#ffb4a8; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.5 system-ui, sans-serif; }
+  body { background:radial-gradient(1200px 600px at 70% -10%, #1d2a6b 0%, transparent 60%), var(--bg); min-height:100vh; }
+  main { max-width:1000px; margin:0 auto; padding:16px 16px 60px; }
+  a { color:var(--accent); }
+  .top { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; }
+  .top a { text-decoration:none; }
+  h1 { font-size:32px; margin:10px 0 4px; letter-spacing:.01em; }
+  h1 span { color:var(--accent); }
+  .lead { color:var(--muted); margin:0 0 16px; font-size:18px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 18px; margin:0 0 20px; }
+  section h2 { margin:0 0 8px; font-size:22px; }
+  section p { margin:6px 0; }
+  .note { color:var(--muted); font-size:15px; }
+  ol, ul { margin:4px 0; padding-left:22px; } li { margin:5px 0; }
+  .inputs { display:flex; flex-wrap:wrap; gap:12px 22px; margin:10px 0; }
+  .inputs label { display:flex; align-items:center; gap:8px; font-size:15px; color:var(--muted); }
+  .inputs select { font:inherit; font-size:15px; background:#0f1530; color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:4px 8px; }
+  button.big { font:600 18px system-ui, sans-serif; background:var(--accent); color:#1a1300; border:0; border-radius:12px; padding:12px 22px; cursor:pointer; }
+  .paper { background:#fff; border-radius:8px; padding:10px; margin:12px 0 0; }
+  .paper svg { display:block; width:100%; height:auto; max-width:620px; margin:0 auto; }
+  footer { color:var(--muted); font-size:13px; margin-top:24px; }
+  @media (max-width:420px) { h1 { font-size:26px; } section { padding:12px; } }
+  @media print {
+    @page { size:letter portrait; margin:0.4in; }
+    html, body { background:#fff; }
+    main { padding:0; max-width:none; }
+    main > *:not(#sheet-card) { display:none !important; }
+    #sheet-card { border:0; padding:0; margin:0; background:#fff; }
+    #sheet-card > *:not(.paper) { display:none !important; }
+    .paper { padding:0; margin:0; border-radius:0; }
+    .paper svg { width:7.7in !important; height:10.2in !important; max-width:none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><a href="./">3D model</a><a href="build.html">Build checklist</a><a href="stands.html">Stands &amp; templates</a><a href="box.html">Box &amp; cutting</a><a href="paint.html">Painting guide</a><a href="arms.html">Arms &amp; collars</a><a href="rings.html">Rings</a></div>
+  <h1>Planet <span>rings</span></h1>
+  <p class="lead">A full-size template for Saturn's, Uranus's and Neptune's rings in 2 mm craft foam, and two tilt gauges for setting them. All sizes in inches.</p>
+
+  <section id="sheet-card">
+    <h2>1. Print the template</h2>
+    <p>Set to the balls as measured with calipers (14 Nov 2026): Saturn 1⅞ in, Uranus 1 9/16 in; Neptune assumed the same as Uranus, so measure it if you make its ring. Each hole is cut 1/16 in smaller than its ball, so the foam grips.</p>
+    <div class="inputs">
+      <label>Saturn's ball <select id="satBall"></select></label>
+      <label>Uranus's ball <select id="uraBall"></select></label>
+      <label>Neptune's ball <select id="nepBall"></select></label>
+    </div>
+    <p><button class="big" id="printBtn">Print the template</button></p>
+    <p class="note">In the print dialog choose <b>Actual size</b> or <b>Scale 100 %</b>, not "Fit to page". Then check the 2 in bar at the bottom with a ruler. If it isn't exactly 2 in, the rings will be off: fix the setting and reprint.</p>
+    <div class="paper"><svg id="sheet" viewBox="0 0 7.7 10.2" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  </section>
+
+  <section>
+    <h2>2. Cut the rings</h2>
+    <ol>
+      <li>Cut each paper ring out on its outside circle, then cut out its hole: fold it gently across the middle to snip a start, then cut round the inner circle.</li>
+      <li>Lay the paper ring on the foam (the back of the sheet, so marks don't show) and trace both circles with a pen, or tape it down and cut through paper and foam together.</li>
+      <li>Cut the outside with sharp scissors. Start the hole with a craft-knife slit, then cut round with scissors. Slow, short snips give a smooth edge.</li>
+      <li><b>Uranus and Neptune:</b> cut straight across the band at the <b>CUT</b> mark. The ring becomes a C that wraps round the ball, and the gap goes at the bottom, round the upright rod.</li>
+    </ol>
+    <p class="note">Pick the foam colour rather than painting: tan or yellow for Saturn, pale blue, grey or white for Uranus and Neptune. Acrylic paint works on the foam if you want Saturn's white circles.</p>
+  </section>
+
+  <section>
+    <h2>3. Glue them on</h2>
+    <ol>
+      <li><b>Saturn:</b> slide the ring over the ball to its middle; the foam stretches a little. No need to cut the ball in half.</li>
+      <li><b>Uranus and Neptune:</b> open the C, wrap it round the ball's middle, and close it with the gap at the bottom.</li>
+      <li>Glue with <b>white or tacky glue, or epoxy</b>. <span style="color:var(--warn);font-weight:600">Never super glue (Gorilla gel): it melts foam.</span> A thin bead where the ring meets the ball, top and bottom. A few straight pins through the ring into the ball hold it while it dries.</li>
+      <li>Let it dry on the bench. Then push the ball onto its upright and turn it so the ring faces the right way (below) before gluing the ball on.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>4. Which way each ring faces</h2>
+    <p>A planet keeps its direction relative to its arm all the way round, so set each ring once, when the ball is glued onto its upright (<a href="arms.html#gaps">arms page, section 5</a>).</p>
+    <ul>
+      <li><b>Saturn, 25°:</b> tilt it about the direction Saturn travels. The edge toward the Sun goes up and the outer edge down, and the front and back edges stay level. Looking along the orbit, hold the 25° gauge's bottom edge along the arm: the ring lies along the slope. With the outer edge down, people around the model see the top of the ring.</li>
+      <li><b>Uranus, upright:</b> the ring's face looks along the arm toward the Sun, and the ring stands across the arm, like a wheel rolling sideways along the orbit (Uranus spins on its side). Check it's upright with the steel square.</li>
+      <li><b>Neptune, 28°:</b> like Saturn, with the 28° gauge.</li>
+    </ul>
+    <p class="note">Before the glue sets, turn each ringed planet by hand past its neighbours. The closest spot, Saturn's ring to Uranus, should be about ⅝ in.</p>
+  </section>
+
+  <footer>Ball sizes and ring sizes: parts-list.md P1 and P4 (20 Oct and 7 Nov 2026); orientation: arms.html section 5.</footer>
+</main>
+<script>
+  const sheet = document.getElementById('sheet'), NS = 'http://www.w3.org/2000/svg';
+  // Inches to the nearest 1/32, as a mixed fraction.
+  function frac(v) {
+    let n = Math.round(v * 32), w = Math.floor(n / 32), r = n % 32, d = 32;
+    while (r && r % 2 === 0) { r /= 2; d /= 2; }
+    return r ? (w ? `${w} ${r}/${d}` : `${r}/${d}`) : String(w);
+  }
+  const SIZES = []; for (let n = 40; n <= 72; n++) SIZES.push(n / 32);   // 1 1/4 .. 2 1/4 in
+  function choices(sel, def) {
+    SIZES.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = frac(v) + ' in'; sel.appendChild(o); });
+    sel.value = def;
+  }
+  const satBall = document.getElementById('satBall'), uraBall = document.getElementById('uraBall'), nepBall = document.getElementById('nepBall');
+  // Measured with calipers 14 Nov 2026: Saturn 1 7/8, Uranus 1 9/16 (sold as 2.0 and 1.6); Neptune assumed as Uranus.
+  choices(satBall, 1.875); choices(uraBall, 1.5625); choices(nepBall, 1.5625);
+  try { const s = JSON.parse(localStorage.getItem('ringsPage2') || '{}');
+        if (s.sat) satBall.value = s.sat; if (s.ura) uraBall.value = s.ura; if (s.nep) nepBall.value = s.nep; } catch (e) {}
+
+  function el(tag, attrs, text) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    sheet.appendChild(e); return e;
+  }
+  const LINE = { fill:'none', stroke:'#000', 'stroke-width':0.012 };
+  const txt = (x, y, s, size = 0.13, extra = {}) => el('text', { x, y, 'font-size':size, 'font-family':'system-ui, sans-serif', 'text-anchor':'middle', fill:'#000', ...extra }, s);
+  function cross(x, y) {
+    el('line', { x1:x - 0.08, y1:y, x2:x + 0.08, y2:y, stroke:'#000', 'stroke-width':0.008 });
+    el('line', { x1:x, y1:y - 0.08, x2:x, y2:y + 0.08, stroke:'#000', 'stroke-width':0.008 });
+  }
+  function ring(cx, cy, outer, ball, name, cut) {
+    const hole = ball - 1 / 16;
+    el('circle', { cx, cy, r:outer / 2, ...LINE });
+    el('circle', { cx, cy, r:hole / 2, ...LINE, 'stroke-dasharray':'0.06 0.03' });
+    cross(cx, cy);
+    txt(cx, cy - 0.2, name, 0.17, { 'font-weight':700 });
+    txt(cx, cy + 0.24, `outside ${frac(outer)}`, 0.1);
+    txt(cx, cy + 0.37, `hole ${frac(hole)}`, 0.1);
+    txt(cx, cy - 0.06 - hole / 2 + 0.2, `ball ${frac(ball)}`, 0.085, { fill:'#555' });
+    if (cut) {                                             // the cut across the band, at the bottom
+      const y1 = cy + hole / 2 - 0.05, y2 = cy + outer / 2 + 0.05;
+      el('line', { x1:cx, y1, x2:cx, y2, stroke:'#c00', 'stroke-width':0.02 });
+      txt(cx + 0.08, y2 + 0.06, 'CUT', 0.11, { fill:'#c00', 'font-weight':700, 'text-anchor':'start' });
+    }
+  }
+  function gauge(x, yb, deg, base, name) {                // a right-angled wedge; the angle at its left corner
+    const h = base * Math.tan(deg * Math.PI / 180);
+    el('path', { d:`M${x} ${yb} L${x + base} ${yb} L${x + base} ${yb - h} Z`, ...LINE });
+    el('path', { d:`M${x + 0.55} ${yb} A0.55 0.55 0 0 0 ${x + 0.55 * Math.cos(deg * Math.PI / 180)} ${yb - 0.55 * Math.sin(deg * Math.PI / 180)}`, fill:'none', stroke:'#000', 'stroke-width':0.008 });
+    txt(x + 0.75, yb - 0.08, `${deg}°`, 0.13, { 'font-weight':700, 'text-anchor':'start' });
+    txt(x + base / 2, yb + 0.2, `${name} tilt gauge: cut out on the solid lines`, 0.1);
+    txt(x + base / 2, yb + 0.34, 'bottom edge along the arm, ring along the slope', 0.1);
+  }
+  function draw() {
+    sheet.replaceChildren();
+    txt(3.85, 0.22, 'Planet rings: print at 100 % (actual size), 2 mm craft foam', 0.16, { 'font-weight':700 });
+    txt(3.85, 0.42, 'Solid line = cut the outside. Dashed line = cut the hole. + = centre.', 0.11);
+    ring(2.05, 2.3, 3, +satBall.value, 'SATURN', false);
+    ring(5.55, 1.75, 2, +uraBall.value, 'URANUS', true);
+    ring(5.55, 4.15, 2, +nepBall.value, 'NEPTUNE', true);
+    txt(2.05, 4.05, 'Slide over the ball to its middle; tilt 25°', 0.11);
+    txt(5.55, 5.55, 'Uranus upright, Neptune 28°; the CUT goes at the bottom', 0.11);
+    gauge(0.55, 7.05, 25, 2.9, 'Saturn');
+    gauge(4.2, 7.05, 28, 2.9, 'Neptune');
+    // The check bar: exactly 2 in.
+    const bx = 2.85, by = 8.25;
+    el('rect', { x:bx, y:by - 0.06, width:2, height:0.12, fill:'#000' });
+    for (let i = 0; i <= 8; i++) el('line', { x1:bx + i / 4, y1:by - (i % 4 ? 0.12 : 0.18), x2:bx + i / 4, y2:by - 0.06, stroke:'#000', 'stroke-width':0.01 });
+    txt(3.85, by + 0.26, 'This bar must measure exactly 2 in. If not, reprint at 100 % ("actual size").', 0.11);
+    // Short reminders, for the bench.
+    [
+      'Glue with white or tacky glue, or epoxy. NEVER super glue (it melts foam). Pins hold the ring while it dries.',
+      'Saturn: edge toward the Sun up, outer edge down, front and back level.',
+      'Uranus: ring stands across the arm, its face toward the Sun (a wheel rolling sideways).',
+      'Turn each ringed planet past its neighbours before the glue sets: about 5/8 in to spare.',
+    ].forEach((s, i) => txt(3.85, 9.0 + i * 0.24, s, 0.105));
+  }
+  [satBall, uraBall, nepBall].forEach(s => s.addEventListener('change', () => {
+    try { localStorage.setItem('ringsPage2', JSON.stringify({ sat:satBall.value, ura:uraBall.value, nep:nepBall.value })); } catch (e) {}
+    draw();
+  }));
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+  draw();
+</script>
+</body>
+</html>
