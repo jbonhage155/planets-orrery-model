@@ -33,5 +33,5 @@ through one hole in the box, and each tube carries an arm with a painted foam pl
 
 ## Licence
 
-MIT (see [LICENSE](LICENSE)). three.js and the planet maps keep their own licences, listed
-there.
+MIT (see [LICENSE](LICENSE)). three.js and the planet maps keep their own licences: see
+[THIRD-PARTY.md](THIRD-PARTY.md).
